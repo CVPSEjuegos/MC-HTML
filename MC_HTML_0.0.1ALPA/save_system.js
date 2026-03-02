@@ -1,13 +1,18 @@
 export class SaveSystem {
     constructor() {
-        this.saveName = "MCHTML_WORLD_ALPHA";
+        this.key = "HTML_CRAFT_WORLDS";
     }
 
-    save(data) {
-        localStorage.setItem(this.saveName, JSON.stringify(data));
+    getAllWorlds() {
+        const data = localStorage.getItem(this.key);
+        return data ? JSON.parse(data) : [];
     }
 
-    load() {
-        return JSON.parse(localStorage.getItem(this.saveName));
+    createWorld(name) {
+        const worlds = this.getAllWorlds();
+        if(!worlds.includes(name)) {
+            worlds.push(name);
+            localStorage.setItem(this.key, JSON.stringify(worlds));
+        }
     }
 }
