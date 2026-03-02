@@ -5,33 +5,60 @@
     <title>MC_HTML Launcher</title>
     <style>
         /* Estilos estilo Minecraft Launcher */
-        body { margin: 0; background: #1e1e1e; color: white; font-family: sans-serif; display: flex; height: 100vh; }
-        #sidebar { width: 200px; background: #252526; border-right: 2px solid #333; display: flex; flex-direction: column; }
-        .side-btn { padding: 15px; cursor: pointer; border-bottom: 1px solid #333; text-align: center; }
-        .side-btn:hover { background: #333; }
-        #main { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background: url('https://www.transparenttextures.com/patterns/carbon-fibre.png'); }
-        .play-section { background: #3c3c3c; width: 100%; padding: 20px; position: absolute; bottom: 0; display: flex; justify-content: center; align-items: center; gap: 20px; }
-        .play-btn { background: #448032; color: white; border: none; padding: 15px 60px; font-size: 20px; cursor: pointer; font-weight: bold; }
-        .play-btn:hover { background: #529b3d; }
-        select { padding: 10px; background: #252526; color: white; border: 1px solid #555; }
-        iframe { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; border: none; z-index: 100; }
+        body { margin: 0; background: #1e1e1e; color: white; font-family: 'Segoe UI', sans-serif; display: flex; height: 100vh; overflow: hidden; }
+        
+        #sidebar { width: 220px; background: #252526; border-right: 2px solid #333; display: flex; flex-direction: column; justify-content: space-between; }
+        
+        .nav-group { display: flex; flex-direction: column; }
+        .side-btn { padding: 15px; cursor: pointer; border-bottom: 1px solid #333; text-align: left; padding-left: 25px; transition: 0.2s; }
+        .side-btn:hover { background: #333; color: #448032; }
+        
+        /* Estilo para el link de Licencia */
+        .license-link { padding: 15px; font-size: 12px; color: #888; text-decoration: none; border-top: 1px solid #333; text-align: center; }
+        .license-link:hover { color: #fff; background: #2d2d2d; }
+
+        #main { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; 
+                background: linear-gradient(rgba(30,30,30,0.8), rgba(30,30,30,0.8)), url('https://www.transparenttextures.com/patterns/carbon-fibre.png'); }
+        
+        h1 { font-size: 3rem; margin-bottom: 10px; letter-spacing: 2px; }
+        
+        .play-section { background: #3c3c3c; width: 100%; padding: 20px; position: absolute; bottom: 0; 
+                         display: flex; justify-content: center; align-items: center; gap: 20px; box-shadow: 0 -5px 15px rgba(0,0,0,0.5); }
+        
+        .play-btn { background: #448032; color: white; border: none; padding: 15px 80px; font-size: 22px; 
+                    cursor: pointer; font-weight: bold; box-shadow: inset 0 -4px 0 rgba(0,0,0,0.3); }
+        .play-btn:hover { background: #529b3d; transform: scale(1.02); }
+        .play-btn:active { transform: translateY(2px); box-shadow: none; }
+
+        select { padding: 12px; background: #252526; color: white; border: 1px solid #555; cursor: pointer; border-radius: 4px; }
+        
+        iframe { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; border: none; z-index: 100; background: #000; }
+        
+        .footer-info { position: absolute; bottom: 100px; color: #555; font-size: 11px; }
     </style>
 </head>
 <body>
 
     <div id="sidebar">
-        <div class="side-btn">JUGAR</div>
-        <div class="side-btn">INSTALACIONES</div>
-        <div class="side-btn">SKINS</div>
+        <div class="nav-group">
+            <div class="side-btn" onclick="location.reload()">JUGAR</div>
+            <div class="side-btn">INSTALACIONES</div>
+            <div class="side-btn">SKINS</div>
+            <div class="side-btn">NOTICIAS</div>
+        </div>
+        
+        <a href="./LICENSE" target="_blank" class="license-link">📜 Ver Licencia MIT</a>
     </div>
 
     <div id="main">
         <h1>MC_HTML <span style="color: #ff0000;">ALPHA</span></h1>
-        <p>Selecciona una versión disponible en el repositorio:</p>
+        <p style="color: #aaa;">Desarrollado en 3D con Three.js</p>
+
+        <div class="footer-info">© 2026 MC_HTML Project - v0.0.1 Open Source</div>
 
         <div class="play-section">
             <select id="version-select">
-                <option value="MC_HTML_0.0.1ALPHA">MC_HTML_0.0.1ALPHA</option>
+                <option value="MC_HTML_0.0.1ALPA">Última versión (0.0.1ALPA)</option>
             </select>
             <button class="play-btn" onclick="iniciarJuego()">¡JUGAR!</button>
         </div>
@@ -44,20 +71,30 @@
             const carpeta = document.getElementById('version-select').value;
             const frame = document.getElementById('game-frame');
             
-            // IMPORTANTE: GitHub Pages necesita la ruta relativa correcta
-            // Buscamos el index.html dentro de la carpeta seleccionada
+            // Ruta relativa hacia el index.html del motor
             frame.src = `./${carpeta}/index.html`;
             frame.style.display = 'block';
 
-            // Pantalla completa automática
-            if (frame.requestFullscreen) frame.requestFullscreen();
+            // Intentar poner en pantalla completa si el navegador lo permite
+            if (frame.requestFullscreen) {
+                frame.requestFullscreen();
+            } else if (frame.webkitRequestFullscreen) {
+                frame.webkitRequestFullscreen();
+            }
         }
 
-        // Para cerrar el juego con ESC y volver al Launcher
-        window.addEventListener('message', (e) => {
-            if(e.data === 'close') {
-                document.getElementById('game-frame').style.display = 'none';
-                document.getElementById('game-frame').src = '';
+        // Escuchar la tecla ESC para salir del juego y volver al Launcher
+        document.addEventListener('keydown', (e) => {
+            if (e.key === "Escape") {
+                const frame = document.getElementById('game-frame');
+                if (frame.style.display === 'block') {
+                    const confirmar = confirm("¿Quieres salir al Launcher?");
+                    if (confirmar) {
+                        frame.style.display = 'none';
+                        frame.src = ''; // Detiene el proceso del juego
+                        document.exitFullscreen().catch(() => {});
+                    }
+                }
             }
         });
     </script>
