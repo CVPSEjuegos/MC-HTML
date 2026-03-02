@@ -1,103 +1,92 @@
-import * as THREE from 'three';
-import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
-import { SaveSystem } from './save_system.js';
+// game.js - Motor principal MC_HTML 0.0.1 ALPHA
+import * as THREE from 'https://cdn.skypack.dev/three@0.132.2';
+import { PointerLockControls } from 'https://cdn.skypack.dev/three@0.132.2/examples/jsm/controls/PointerLockControls.js';
+
+// CONEXIONES CON TUS OTROS ARCHIVOS
 import { World } from './world.js';
+import { SaveSystem } from './save_system.js';
 
-let scene, camera, renderer, controls, world, peer;
-let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
-let velocity = new THREE.Vector3();
-let prevTime = performance.now();
+console.log("🎮 MC_HTML: Iniciando conexiones de módulos...");
 
-// EXPOSICI�N DE FUNCIONES AL HTML
-window.switchScreen = (id) => {
-    document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
-    document.getElementById(id).style.display = 'flex';
-    if (id === 'world-list') renderWorlds();
-};
-
-window.promptCreateWorld = () => {
-    const n = prompt("Nombre:");
-    if (n) { SaveSystem.saveWorld(n); renderWorlds(); }
-};
-
-window.renderWorlds = () => {
-    const container = document.getElementById('worlds-container');
-    container.innerHTML = SaveSystem.getAll().map(w => `
-        <div class="world-item">
-            <span>${w.name} (.MCtx)</span>
-            <button class="mc-btn" style="width:100px" onclick="startGame()">Jugar</button>
-        </div>
-    `).join('');
-};
-
-window.startGame = () => {
-    document.getElementById('ui-layer').style.display = 'none';
-    document.getElementById('crosshair').style.display = 'block';
-    controls.lock();
-};
-
-// INICIALIZACI�N
-function init() {
-    scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x87CEEB);
-    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-
-    renderer = new THREE.WebGLRenderer();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
-
-    controls = new PointerLockControls(camera, document.body);
-    scene.add(new THREE.AmbientLight(0xffffff, 0.7));
-
-    world = new World(scene);
-    world.generate();
-    camera.position.set(16, 20, 16);
-
-    // PeerJS Setup
-    peer = new Peer();
-    peer.on('open', id => document.getElementById('my-id').innerText = id);
-
-    setupControls();
-    animate();
-}
-
-function setupControls() {
-    const onKey = (v) => (e) => {
-        if (e.code === 'KeyW') moveForward = v;
-        if (e.code === 'KeyS') moveBackward = v;
-        if (e.code === 'KeyA') moveLeft = v;
-        if (e.code === 'KeyD') moveRight = v;
-        if (e.code === 'Space' && v && camera.position.y <= 15) velocity.y = 10;
-    };
-    document.addEventListener('keydown', onKey(true));
-    document.addEventListener('keyup', onKey(false));
-}
-
-function animate() {
-    requestAnimationFrame(animate);
-    if (controls.isLocked) {
-        const time = performance.now();
-        const delta = (time - prevTime) / 1000;
-
-        velocity.x -= velocity.x * 10.0 * delta;
-        velocity.z -= velocity.z * 10.0 * delta;
-        if (camera.position.y > 14) velocity.y -= 9.8 * 2.0 * delta;
-
-        if (moveForward) velocity.z -= 100.0 * delta;
-        if (moveBackward) velocity.z += 100.0 * delta;
-        if (moveLeft) velocity.x -= 100.0 * delta;
-        if (moveRight) velocity.x += 100.0 * delta;
-
-        controls.moveRight(-velocity.x * delta);
-        controls.moveForward(-velocity.z * delta);
-        camera.position.y += (velocity.y * delta);
-
-        if (camera.position.y < 14) { velocity.y = 0; camera.position.y = 14; }
-        prevTime = time;
-
-        world.update(camera.position);
+class Game {
+    constructor() {
+        this.init();
     }
-    renderer.render(scene, camera);
+
+    async init() {
+        try {
+            // 1. Configuración de la Escena
+            this.scene = new THREE.Scene();
+            this.scene.background = new THREE.Color(0x87CEEB); // Cielo azul
+            this.scene.fog = new THREE.Fog(0x87CEEB, 20, 100);
+
+            this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            this.renderer = new THREE.WebGLRenderer({ antialias: true });
+            this.renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(this.renderer.domElement);
+
+            // 2. Conexión con el Sistema de Guardado
+            this.saveSystem = new SaveSystem();
+            console.log("📂 Sistema de archivos .MCtx conectado.");
+
+            // 3. Conexión con el Mundo (Las 4 Zonas)
+            this.world = new World(this.scene);
+            await this.world.generateInitialTerrain();
+            console.log("🌍 Generación de terreno por Chunks lista.");
+
+            // 4. Controles y Físicas
+            this.controls = new PointerLockControls(this.camera, document.body);
+            this.setupControls();
+
+            // 5. Luces
+            const light = new THREE.HemisphereLight(0xeeeeee, 0x888888, 1);
+            this.scene.add(light);
+
+            this.animate();
+            
+            // Quitar mensaje de carga si existe
+            const loadingMsg = document.getElementById('loading-msg');
+            if(loadingMsg) loadingMsg.style.display = 'none';
+
+        } catch (error) {
+            console.error("❌ Error Crítico al conectar módulos:", error);
+            document.body.innerHTML = `<div style="color:white; padding:20px; background:red;">
+                <h1>Error de Conexión</h1>
+                <p>No se pudo cargar un módulo. Revisa que world.js y save_system.js estén en la misma carpeta.</p>
+                <small>${error.message}</small>
+            </div>`;
+        }
+    }
+
+    setupControls() {
+        document.addEventListener('click', () => {
+            this.controls.lock();
+        });
+
+        // Movimiento básico WASD
+        this.velocity = new THREE.Vector3();
+        this.direction = new THREE.Vector3();
+        
+        document.addEventListener('keydown', (e) => {
+            if(e.code === 'Space' && this.camera.position.y <= 2) {
+                this.velocity.y += 0.2; // Salto simple
+            }
+        });
+    }
+
+    animate() {
+        requestAnimationFrame(() => this.animate());
+        
+        // Actualizar zona activa del mundo según posición de cámara
+        if (this.world) {
+            this.world.update(this.camera.position);
+        }
+
+        this.renderer.render(this.scene, this.camera);
+    }
 }
 
-init();
+// Iniciar el juego cuando la ventana cargue
+window.onload = () => {
+    new Game();
+};
