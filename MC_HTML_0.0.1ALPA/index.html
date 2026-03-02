@@ -2,66 +2,44 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>MC-HTML | Voxel Engine</title>
+    <title>MC-HTML Alpha 0.0.1</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         body { margin: 0; overflow: hidden; background: #000; font-family: 'Segoe UI', sans-serif; }
         canvas { display: block; }
         .screen { position: absolute; width: 100%; height: 100%; display: none; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.85); z-index: 20; color: white; }
         .active { display: flex !important; }
-        h1 { font-size: 3rem; text-shadow: 4px 4px #000; margin-bottom: 30px; }
-        .btn-group { display: flex; flex-direction: column; gap: 12px; width: 320px; }
-        .btn { padding: 15px; background: #444; color: white; border: 2px solid #000; cursor: pointer; font-weight: bold; font-size: 16px; transition: 0.2s; }
-        .btn:hover { background: #5a5a5a; border-color: #fff; }
-        .list-box { width: 450px; height: 200px; background: #222; border: 2px solid #000; margin-bottom: 15px; overflow-y: auto; padding: 10px; }
-        .item { padding: 10px; background: #333; margin-bottom: 5px; cursor: pointer; border: 1px solid #444; }
-        #crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 24px; display: none; pointer-events: none; z-index: 5; font-family: monospace; }
-        #peer-id-display { position: fixed; bottom: 10px; left: 10px; color: yellow; font-size: 12px; z-index: 30; }
+        #crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 24px; display: none; pointer-events: none; z-index: 5; }
+        .btn-group { display: flex; flex-direction: column; gap: 10px; width: 300px; }
+        .btn { padding: 12px; background: #444; color: white; border: 2px solid #000; cursor: pointer; font-weight: bold; }
+        .btn:hover { background: #666; }
     </style>
 </head>
 <body>
 
     <div id="crosshair">+</div>
-    <div id="peer-id-display"></div>
 
     <div id="main-menu" class="screen active">
-        <h1>HTML-CRAFT</h1>
+        <h1>HTML-CRAFT ALPHA</h1>
         <div class="btn-group">
-            <button class="btn" onclick="showScreen('singleplayer')">Un jugador</button>
+            <button class="btn" onclick="showScreen('singleplayer')">Un Jugador</button>
             <button class="btn" onclick="showScreen('multiplayer')">Multijugador</button>
-            <button class="btn">Salir</button>
         </div>
     </div>
 
     <div id="singleplayer" class="screen">
-        <h2>Un jugador</h2>
-        <div class="list-box" id="world-list">
-            <div class="item">Mundo Nuevo #1</div>
-        </div>
-        <div class="btn-group" style="flex-direction: row; width: 500px;">
-            <button class="btn" style="flex:1" id="btn-play">Jugar Mundo</button>
-            <button class="btn" style="flex:1" id="btn-create">Crear Mundo</button>
-            <button class="btn" style="flex:1" onclick="showScreen('main-menu')">Cancelar</button>
-        </div>
-    </div>
-
-    <div id="multiplayer" class="screen">
-        <h2>Multijugador</h2>
-        <div class="list-box">
-            <div class="item">🌐 SERVIDOR OFICIAL (test1_2026)</div>
-        </div>
-        <div class="btn-group" style="flex-direction: row; width: 600px;">
-            <button class="btn" style="flex:1" onclick="showScreen('main-menu')">Volver</button>
-            <button class="btn" style="flex:1" id="btn-host">Abrir Servidor</button>
-            <button class="btn" style="flex:1" id="btn-join">Conectar ID</button>
+        <h2>Mundos</h2>
+        <div class="btn-group">
+            <button class="btn" id="btn-play-alpha">Cargar Mundo Alpha</button>
+            <button class="btn" onclick="showScreen('main-menu')">Volver</button>
         </div>
     </div>
 
     <div id="esc-menu" class="screen">
         <h2>PAUSA</h2>
         <div class="btn-group">
-            <button class="btn" id="btn-reanudar">Reanudar Juego</button>
-            <button class="btn" onclick="location.reload()">Salir al Menú</button>
+            <button class="btn" id="btn-resume">Reanudar</button>
+            <button class="btn" onclick="location.reload()">Salir</button>
         </div>
     </div>
 
@@ -74,11 +52,12 @@
     }
     </script>
     <script>
-        function showScreen(id) {
+        // Función global para cambiar pantallas
+        window.showScreen = function(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
         }
     </script>
-    <script type="module" src="./game.js"></script>
+    <script type="module" src="game.js"></script>
 </body>
 </html>
