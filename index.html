@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MC_HTML Launcher</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #1e1e1e;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Barra lateral izquierda */
+        #sidebar {
+            width: 250px;
+            background: #252526;
+            display: flex;
+            flex-direction: column;
+            border-right: 2px solid #333;
+        }
+
+        .sidebar-item {
+            padding: 15px 20px;
+            cursor: pointer;
+            border-bottom: 1px solid #333;
+            transition: background 0.2s;
+        }
+
+            .sidebar-item:hover {
+                background: #37373d;
+            }
+
+            .sidebar-item.active {
+                background: #094771;
+                border-left: 4px solid #007acc;
+            }
+
+        /* Contenido principal */
+        #main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://p2.piqsels.com/preview/834/464/594/dirt-grass-background-texture.jpg');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .header {
+            padding: 40px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+
+        .info-card {
+            background: rgba(0,0,0,0.7);
+            margin: 20px 40px;
+            padding: 20px;
+            border-radius: 5px;
+            max-width: 600px;
+        }
+
+        /* Barra inferior de Jugar */
+        .play-bar {
+            margin-top: auto;
+            background: #3c3c3c;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 40px;
+        }
+
+        .version-selector {
+            background: #252526;
+            color: white;
+            border: 1px solid #555;
+            padding: 10px;
+            margin-right: 20px;
+        }
+
+        .play-button {
+            background: #448032; /* Verde Minecraft */
+            color: white;
+            border: none;
+            padding: 15px 80px;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: inset 0 -4px 0 rgba(0,0,0,0.3);
+            transition: transform 0.1s;
+        }
+
+            .play-button:hover {
+                background: #529b3d;
+            }
+
+            .play-button:active {
+                transform: translateY(2px);
+                box-shadow: none;
+            }
+
+        /* Frame para el juego */
+        #game-frame {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: black;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="sidebar">
+        <div class="sidebar-item active">JUGAR</div>
+        <div class="sidebar-item">INSTALACIONES</div>
+        <div class="sidebar-item">ASPECTOS</div>
+        <div class="sidebar-item">NOTAS DEL PARCHE</div>
+    </div>
+
+    <div id="main-content">
+        <div class="header">
+            <h1>MC_HTML: EDICIÓN WEB</h1>
+        </div>
+
+        <div class="info-card">
+            <h3>Novedades de la 0.0.1 ALPHA</h3>
+            <ul>
+                <li>Nuevo sistema de 4 zonas de renderizado.</li>
+                <li>Generación de terreno procedimental (LOD).</li>
+                <li>Guardado de mundos en formato .MCtx.</li>
+            </ul>
+        </div>
+
+        <div class="play-bar">
+            <select id="v-select" class="version-selector">
+                <option value="MC_HTML_0.0.1ALPHA/index.html">Última versión (0.0.1ALPHA)</option>
+            </select>
+            <button class="play-button" onclick="launchGame()">JUGAR</button>
+        </div>
+    </div>
+
+    <iframe id="game-frame"></iframe>
+
+    <script>
+        function launchGame() {
+            const versionPath = document.getElementById('v-select').value;
+            const frame = document.getElementById('game-frame');
+
+            // Cargamos la versión elegida
+            frame.src = versionPath;
+            frame.style.display = 'block';
+
+            // Intentar pedir pantalla completa
+            if (frame.requestFullscreen) {
+                frame.requestFullscreen();
+            }
+        }
+
+        // Si presionas ESC, el iframe se puede cerrar (opcional)
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const frame = document.getElementById('game-frame');
+                frame.style.display = 'none';
+                frame.src = '';
+            }
+        });
+    </script>
+</body>
+</html>
