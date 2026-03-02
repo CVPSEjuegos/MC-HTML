@@ -1,12 +1,16 @@
-export const SaveSystem = {
-    saveWorld(name) {
-        const data = { name, seed: Math.random(), date: new Date().toLocaleDateString() };
-        const encrypted = btoa(JSON.stringify(data));
-        localStorage.setItem(`mundo_${name}.MCtx`, encrypted);
-    },
-    getAll() {
-        return Object.keys(localStorage)
-            .filter(k => k.endsWith('.MCtx'))
-            .map(k => JSON.parse(atob(localStorage.getItem(k))));
+export class SaveSystem {
+    constructor() {
+        this.prefix = "MCHTML_SAVE_";
     }
-};
+
+    saveWorld(name, data) {
+        const blob = btoa(JSON.stringify(data)); // Simulación de formato .MCtx
+        localStorage.setItem(this.prefix + name, blob);
+        console.log(`Mundo ${name} guardado con éxito.`);
+    }
+
+    loadWorld(name) {
+        const data = localStorage.getItem(this.prefix + name);
+        return data ? JSON.parse(atob(data)) : null;
+    }
+}
