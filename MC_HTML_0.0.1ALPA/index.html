@@ -69,7 +69,37 @@
         }
     </script>
     <script type="module" src="./game.js"></script>
+
+    //Aciones multijugador
+    <div id="player-list" style="position:fixed; top:20px; right:20px; background:rgba(0,0,0,0.5); color:white; padding:10px; display:none; z-index:100;"></div>
+
+<div id="esc-menu" class="screen">
+    <h2>PAUSA</h2>
+    <div class="btn-group">
+        <button class="btn" onclick="reanudar()">Reanudar Juego</button>
+        <button class="btn" onclick="showScreen('options-menu')">Opciones</button>
+        <button class="btn" onclick="location.reload()">Volver al Menú</button>
+    </div>
+</div>
+
+<div id="options-menu" class="screen">
+    <h2>OPCIONES</h2>
+    <div class="btn-group">
+        <label>FOV (Campo de visión):</label>
+        <input type="range" min="30" max="110" value="75" oninput="updateFOV(this.value)">
+        
+        <label>FPS Máximos:</label>
+        <select onchange="window.maxFPS = this.value">
+            <option value="30">30 FPS</option>
+            <option value="60" selected>60 FPS</option>
+            <option value="120">120 FPS</option>
+        </select>
+        
+        <button class="btn" onclick="showScreen('esc-menu')">Listo</button>
+    </div>
+</div>
 </body>
 </html>
+
 
 
