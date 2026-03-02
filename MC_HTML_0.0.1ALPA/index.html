@@ -2,14 +2,49 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>HTML-Craft Pro</title>
-    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML-Craft Pro Engine</title>
+    <link rel="stylesheet" href="./style.css">
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #000; }
+        #menu {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: white;
+            font-family: 'Courier New', Courier, monospace;
+            z-index: 10;
+        }
+        .btn {
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            background: #448032;
+            color: white;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 5px 0 #2d5a21;
+        }
+        .btn:active { transform: translateY(3px); box-shadow: 0 2px 0 #2d5a21; }
+        #crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            border: 2px solid white;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            display: none;
+        }
+    </style>
 </head>
 <body>
     <div id="menu">
         <h1>HTML-CRAFT PRO</h1>
-        <button class="btn" id="playBtn">JUGAR MUNDO NUEVO</button>
-        <div id="status">Cargando módulos de terreno...</div>
+        <button class="btn" id="playBtn">INICIAR MUNDO</button>
+        <div id="status">Listo para generar terreno...</div>
     </div>
 
     <div id="crosshair"></div>
@@ -23,6 +58,6 @@
         }
     </script>
 
-    <script type="module" src="game.js"></script>
+    <script type="module" src="./game.js"></script>
 </body>
 </html>
