@@ -5,86 +5,72 @@ import { SaveSystem } from './save_system.js';
 
 class Game {
     constructor() {
-        this.saveSystem = new SaveSystem();
-        this.initEngine();
-        this.setupMenuLogic();
+        this.playerData = { name: "Steve", skin: null };
+        this.init();
     }
 
-    initEngine() {
+    async init() {
+        // 1. CARGAR DATOS DEL LAUNCHER
+        const saved = localStorage.getItem('MC_HTML_SETTINGS');
+        if(saved) {
+            this.playerData = JSON.parse(saved);
+            console.log("👤 Jugador cargado:", this.playerData.name);
+        }
+
+        // 2. CONFIGURACIÓN 3D
         this.scene = new THREE.Scene();
         this.scene.background = new THREE.Color(0x87CEEB);
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         this.renderer = new THREE.WebGLRenderer({ antialias: true });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(this.renderer.domElement);
-        
+
+        // 3. MUNDO Y PERSONAJE
         this.world = new World(this.scene);
-        this.controls = new PointerLockControls(this.camera, document.body);
+        this.saveSystem = new SaveSystem();
         
-        const light = new THREE.AmbientLight(0xffffff, 0.8);
-        this.scene.add(light);
-    }
-
-    setupMenuLogic() {
-        const btnPlay = document.getElementById('btn-play-world');
-        const btnCreate = document.getElementById('btn-create-world');
-        const worldListContainer = document.getElementById('world-list');
-
-        // Cargar lista inicial desde "AppData" (LocalStorage)
-        this.refreshWorldList();
-
-        btnCreate.addEventListener('click', () => {
-            const name = prompt("Nombre del nuevo mundo:");
-            if(name) {
-                this.saveSystem.createWorld(name);
-                this.refreshWorldList();
-            }
-        });
-
-        btnPlay.addEventListener('click', () => {
-            if(this.selectedWorld) {
-                this.startWorld();
-            } else {
-                alert("Selecciona un mundo primero");
-            }
-        });
-
-        this.controls.addEventListener('unlock', () => {
-            document.getElementById('main-menu').classList.add('active');
-            document.getElementById('crosshair').style.display = 'none';
-        });
-    }
-
-    refreshWorldList() {
-        const worlds = this.saveSystem.getAllWorlds();
-        const container = document.getElementById('world-list');
-        container.innerHTML = '';
-        worlds.forEach(w => {
-            const div = document.createElement('div');
-            div.className = 'list-item';
-            div.innerText = w;
-            div.onclick = () => {
-                this.selectedWorld = w;
-                // Resaltar visualmente
-                Array.from(container.children).forEach(c => c.style.border = '1px solid #444');
-                div.style.border = '1px solid #448032';
-            };
-            container.appendChild(div);
-        });
-    }
-
-    async startWorld() {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById('crosshair').style.display = 'block';
-        
+        // Pasamos la skin al mundo para que cree el avatar
         await this.world.generateInitialTerrain();
-        this.camera.position.set(8, 10, 8);
-        this.controls.lock();
+        this.createPlayerAvatar();
+
+        this.controls = new PointerLockControls(this.camera, document.body);
+        this.setupMenu();
         this.animate();
+    }
+
+    createPlayerAvatar() {
+        // Si hay una skin personalizada, la cargamos como textura
+        const loader = new THREE.TextureLoader();
+        const skinTexture = this.playerData.skin 
+            ? loader.load(this.playerData.skin) 
+            : loader.load('https://minecraft.net/static/theme/img/characters/steve.png');
+        
+        // Filtro para que no se vea borrosa (Pixel Art)
+        skinTexture.magFilter = THREE.NearestFilter;
+
+        const geometry = new THREE.BoxGeometry(0.6, 1.8, 0.6);
+        const material = new THREE.MeshLambertMaterial({ map: skinTexture });
+        this.avatar = new THREE.Mesh(geometry, material);
+        
+        // Lo ponemos en la escena (aunque tú no te ves a ti mismo en 1ª persona)
+        // Esto servirá para cuando hagamos el Multijugador
+        this.scene.add(this.avatar);
+    }
+
+    setupMenu() {
+        const btn = document.getElementById('playBtn');
+        if(btn) btn.addEventListener('click', () => this.controls.lock());
     }
 
     animate() {
         requestAnimationFrame(() => this.animate());
+        
+        // El avatar sigue a la cámara (para el multijugador)
+        if(this.avatar) {
+            this.avatar.position.copy(this.camera.position);
+            this.avatar.position.y -= 1; 
+        }
+
         this.renderer.render(this.scene, this.camera);
     }
 }
