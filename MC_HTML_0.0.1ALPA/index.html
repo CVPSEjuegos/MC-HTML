@@ -2,25 +2,17 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>MC-HTML Alpha - Multijugador</title>
+    <title>MC-HTML Alpha 0.0.1</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         body { margin: 0; overflow: hidden; background: #000; font-family: 'Segoe UI', sans-serif; color: white; }
-        .screen { position: absolute; width: 100%; height: 100%; display: none; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.9); z-index: 20; }
+        canvas { display: block; }
+        .screen { position: absolute; width: 100%; height: 100%; display: none; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.85); z-index: 20; }
         .active { display: flex !important; }
         .btn-group { display: flex; flex-direction: column; gap: 10px; width: 350px; }
-        .btn { padding: 15px; background: #444; color: white; border: 2px solid #000; cursor: pointer; font-weight: bold; }
-        .btn:hover:not(:disabled) { background: #666; border-color: #fff; }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        
-        /* Lista de Servidores */
-        .server-list { width: 500px; height: 200px; background: #222; border: 2px solid #555; overflow-y: auto; margin-bottom: 20px; }
-        .server-item { padding: 15px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
-        .server-item:hover { background: #333; }
-        .status-online { color: #0f0; font-size: 12px; }
-        .status-offline { color: #f00; font-size: 12px; }
-        
-        #crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 24px; display: none; z-index: 5; }
+        .btn { padding: 12px; background: #444; color: white; border: 2px solid #000; cursor: pointer; font-weight: bold; font-size: 16px; }
+        .btn:hover { background: #666; border-color: #fff; }
+        #crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 24px; display: none; pointer-events: none; z-index: 5; }
         #network-status { position: fixed; top: 10px; right: 10px; font-size: 12px; z-index: 100; }
     </style>
 </head>
@@ -37,28 +29,34 @@
         </div>
     </div>
 
+    <div id="singleplayer" class="screen">
+        <h2>Mundos Locales</h2>
+        <div class="btn-group">
+            <button class="btn" id="btn-play-alpha">Cargar Mundo Alpha</button>
+            <button class="btn" onclick="showScreen('main-menu')">Volver</button>
+        </div>
+    </div>
+
     <div id="multiplayer" class="screen">
         <h2>Multijugador</h2>
-        <div id="net-warning" style="color: yellow; margin-bottom: 10px; display: none;">⚠️ Se requiere Internet para esta función</div>
-        
-        <div class="server-list" id="server-list">
-            <div class="server-item" onclick="conectarServidor('OFFICIAL_TEST_2026')">
-                <span>🌐 Servidor Oficial Alpha</span>
-                <span class="status-online" id="official-status">● ONLINE</span>
+        <div id="server-list" style="width: 450px; background: #222; border: 2px solid #555; margin-bottom: 15px; padding: 10px;">
+            <div style="padding: 10px; background: #333; cursor: pointer;" onclick="window.conectarServidor('OFFICIAL_TEST_2026')">
+                🌐 SERVIDOR OFICIAL (Alpha Test)
             </div>
         </div>
-
-        <div class="btn-group" style="flex-direction: row; width: 520px;">
-            <button class="btn" style="flex:1" id="btn-host" disabled>Crear Servidor</button>
-            <button class="btn" style="flex:1" id="btn-join" disabled>Unirse con ID</button>
+        <div class="btn-group" style="flex-direction: row; width: 500px;">
+            <button class="btn" style="flex:1" id="btn-host">Crear Servidor</button>
+            <button class="btn" style="flex:1" id="btn-join">Unirse ID</button>
             <button class="btn" style="flex:1" onclick="showScreen('main-menu')">Volver</button>
         </div>
     </div>
 
     <div id="esc-menu" class="screen">
         <h2>PAUSA</h2>
-        <button class="btn" id="btn-resume">Reanudar</button>
-        <button class="btn" onclick="location.reload()">Salir</button>
+        <div class="btn-group">
+            <button class="btn" id="btn-resume">Reanudar</button>
+            <button class="btn" onclick="location.reload()">Salir al Menú</button>
+        </div>
     </div>
 
     <script type="importmap">
@@ -70,35 +68,24 @@
     }
     </script>
     <script>
-        // Sistema de Detección de Internet
-        function updateOnlineStatus() {
-            const isOnline = navigator.onLine;
-            const statusBox = document.getElementById('network-status');
-            const warning = document.getElementById('net-warning');
-            const btnHost = document.getElementById('btn-host');
-            const btnJoin = document.getElementById('btn-join');
-
-            if(isOnline) {
-                statusBox.innerHTML = "🟢 Conectado a Internet";
-                warning.style.display = 'none';
-                btnHost.disabled = false;
-                btnJoin.disabled = false;
-            } else {
-                statusBox.innerHTML = "🔴 Sin conexión";
-                warning.style.display = 'block';
-                btnHost.disabled = true;
-                btnJoin.disabled = true;
-            }
-        }
-
-        window.addEventListener('online', updateOnlineStatus);
-        window.addEventListener('offline', updateOnlineStatus);
-        updateOnlineStatus();
-
         window.showScreen = function(id) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
+            document.querySelectorAll('.screen').forEach(s => {
+                s.classList.remove('active');
+                s.style.display = 'none';
+            });
+            const target = document.getElementById(id);
+            if (target) {
+                target.classList.add('active');
+                target.style.display = 'flex';
+            }
+        };
+
+        function updateNet() {
+            document.getElementById('network-status').innerHTML = navigator.onLine ? "🟢 Online" : "🔴 Offline";
         }
+        window.addEventListener('online', updateNet);
+        window.addEventListener('offline', updateNet);
+        updateNet();
     </script>
     <script type="module" src="game.js"></script>
 </body>
