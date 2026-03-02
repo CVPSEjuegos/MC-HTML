@@ -5,49 +5,82 @@ import { SaveSystem } from './save_system.js';
 
 class Game {
     constructor() {
-        this.init();
+        this.saveSystem = new SaveSystem();
+        this.initEngine();
+        this.setupMenuLogic();
     }
 
-    async init() {
+    initEngine() {
         this.scene = new THREE.Scene();
         this.scene.background = new THREE.Color(0x87CEEB);
-        this.scene.fog = new THREE.Fog(0x87CEEB, 10, 50);
-
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         this.renderer = new THREE.WebGLRenderer({ antialias: true });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(this.renderer.domElement);
-
-        this.world = new World(this.scene);
-        this.saveSystem = new SaveSystem();
-        this.controls = new PointerLockControls(this.camera, document.body);
-
-        // Luces
-        const ambient = new THREE.AmbientLight(0xffffff, 0.8);
-        this.scene.add(ambient);
-
-        // INICIO DE GENERACIÓN
-        await this.world.generateInitialTerrain();
         
-        // Posición inicial: Un poco elevado para ver el suelo
-        this.camera.position.set(16, 10, 16);
-        this.camera.lookAt(0, 0, 0);
-
-        this.setupMenu();
-        this.animate();
-
-        // Avisar al status del HTML que ya cargó
-        const status = document.getElementById('status');
-        if(status) status.innerText = "¡Mundo Cargado! Haz clic para jugar.";
+        this.world = new World(this.scene);
+        this.controls = new PointerLockControls(this.camera, document.body);
+        
+        const light = new THREE.AmbientLight(0xffffff, 0.8);
+        this.scene.add(light);
     }
 
-    setupMenu() {
-        const btn = document.getElementById('playBtn');
-        if(btn) {
-            btn.addEventListener('click', () => {
-                this.controls.lock();
-            });
-        }
+    setupMenuLogic() {
+        const btnPlay = document.getElementById('btn-play-world');
+        const btnCreate = document.getElementById('btn-create-world');
+        const worldListContainer = document.getElementById('world-list');
+
+        // Cargar lista inicial desde "AppData" (LocalStorage)
+        this.refreshWorldList();
+
+        btnCreate.addEventListener('click', () => {
+            const name = prompt("Nombre del nuevo mundo:");
+            if(name) {
+                this.saveSystem.createWorld(name);
+                this.refreshWorldList();
+            }
+        });
+
+        btnPlay.addEventListener('click', () => {
+            if(this.selectedWorld) {
+                this.startWorld();
+            } else {
+                alert("Selecciona un mundo primero");
+            }
+        });
+
+        this.controls.addEventListener('unlock', () => {
+            document.getElementById('main-menu').classList.add('active');
+            document.getElementById('crosshair').style.display = 'none';
+        });
+    }
+
+    refreshWorldList() {
+        const worlds = this.saveSystem.getAllWorlds();
+        const container = document.getElementById('world-list');
+        container.innerHTML = '';
+        worlds.forEach(w => {
+            const div = document.createElement('div');
+            div.className = 'list-item';
+            div.innerText = w;
+            div.onclick = () => {
+                this.selectedWorld = w;
+                // Resaltar visualmente
+                Array.from(container.children).forEach(c => c.style.border = '1px solid #444');
+                div.style.border = '1px solid #448032';
+            };
+            container.appendChild(div);
+        });
+    }
+
+    async startWorld() {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById('crosshair').style.display = 'block';
+        
+        await this.world.generateInitialTerrain();
+        this.camera.position.set(8, 10, 8);
+        this.controls.lock();
+        this.animate();
     }
 
     animate() {
