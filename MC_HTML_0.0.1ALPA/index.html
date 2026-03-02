@@ -2,12 +2,12 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>HTML-Craft Pro Engine</title>
+    <title>MC-HTML</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         body { margin: 0; overflow: hidden; background: #000; font-family: 'Segoe UI', sans-serif; }
         .screen { position: absolute; width: 100%; height: 100%; display: none; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.85); z-index: 20; color: white; }
-        .active { display: flex; }
+        .active { display: flex !important; }
         h1 { font-size: 3rem; text-shadow: 4px 4px #000; margin-bottom: 30px; }
         .btn-group { display: flex; flex-direction: column; gap: 12px; width: 320px; }
         .btn { padding: 15px; background: #444; color: white; border: 2px solid #000; cursor: pointer; font-weight: bold; font-size: 16px; transition: 0.2s; }
@@ -16,11 +16,17 @@
         .item { padding: 10px; background: #333; margin-bottom: 5px; cursor: pointer; border: 1px solid #444; }
         .item:hover { background: #448032; }
         #crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 24px; display: none; pointer-events: none; z-index: 5; }
+        #player-list { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 300px; background: rgba(0,0,0,0.7); border: 2px solid #fff; padding: 20px; display: none; z-index: 100; color: white; text-align: center; }
     </style>
 </head>
 <body>
 
     <div id="crosshair">+</div>
+    <div id="player-list">
+        <h3>JUGADORES</h3>
+        <hr>
+        <div id="players-container"></div>
+    </div>
 
     <div id="main-menu" class="screen active">
         <h1>HTML-CRAFT</h1>
@@ -44,7 +50,7 @@
     <div id="multiplayer" class="screen">
         <h2>Multijugador</h2>
         <div class="list-box">
-            <div class="item" id="official-server">🌐 SERVIDOR OFICIAL (Semilla: test1_02/03/2026)</div>
+            <div class="item" id="official-server">🌐 SERVIDOR OFICIAL (test1_02/03/2026)</div>
         </div>
         <div class="btn-group" style="flex-direction: row; width: 600px;">
             <button class="btn" style="flex:1" onclick="showScreen('main-menu')">Volver</button>
@@ -54,14 +60,38 @@
         </div>
     </div>
 
+    <div id="esc-menu" class="screen">
+        <h2>PAUSA</h2>
+        <div class="btn-group">
+            <button class="btn" id="btn-reanudar">Reanudar Juego</button>
+            <button class="btn" onclick="showScreen('options-menu')">Opciones</button>
+            <button class="btn" onclick="location.reload()">Volver al Menú</button>
+        </div>
+    </div>
+
+    <div id="options-menu" class="screen">
+        <h2>OPCIONES</h2>
+        <div class="btn-group">
+            <label>FOV (Campo de visión):</label>
+            <input type="range" id="fov-range" min="30" max="110" value="75">
+            <label>FPS Máximos:</label>
+            <select id="fps-select">
+                <option value="30">30 FPS</option>
+                <option value="60" selected>60 FPS</option>
+                <option value="120">120 FPS</option>
+            </select>
+            <button class="btn" onclick="showScreen('esc-menu')">Listo</button>
+        </div>
+    </div>
+
     <script type="importmap">
-{
-    "imports": {
-        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
     }
-}
-</script>
+    </script>
     <script>
         function showScreen(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -69,37 +99,5 @@
         }
     </script>
     <script type="module" src="./game.js"></script>
-
-    //Aciones multijugador
-    <div id="player-list" style="position:fixed; top:20px; right:20px; background:rgba(0,0,0,0.5); color:white; padding:10px; display:none; z-index:100;"></div>
-
-<div id="esc-menu" class="screen">
-    <h2>PAUSA</h2>
-    <div class="btn-group">
-        <button class="btn" onclick="reanudar()">Reanudar Juego</button>
-        <button class="btn" onclick="showScreen('options-menu')">Opciones</button>
-        <button class="btn" onclick="location.reload()">Volver al Menú</button>
-    </div>
-</div>
-
-<div id="options-menu" class="screen">
-    <h2>OPCIONES</h2>
-    <div class="btn-group">
-        <label>FOV (Campo de visión):</label>
-        <input type="range" min="30" max="110" value="75" oninput="updateFOV(this.value)">
-        
-        <label>FPS Máximos:</label>
-        <select onchange="window.maxFPS = this.value">
-            <option value="30">30 FPS</option>
-            <option value="60" selected>60 FPS</option>
-            <option value="120">120 FPS</option>
-        </select>
-        
-        <button class="btn" onclick="showScreen('esc-menu')">Listo</button>
-    </div>
-</div>
 </body>
 </html>
-
-
-
