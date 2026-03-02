@@ -5,19 +5,10 @@ import { SaveSystem } from './save_system.js';
 
 class Game {
     constructor() {
-        this.playerData = { name: "Steve", skin: null };
         this.init();
     }
 
     async init() {
-        // 1. CARGAR DATOS DEL LAUNCHER
-        const saved = localStorage.getItem('MC_HTML_SETTINGS');
-        if(saved) {
-            this.playerData = JSON.parse(saved);
-            console.log("👤 Jugador cargado:", this.playerData.name);
-        }
-
-        // 2. CONFIGURACIÓN 3D
         this.scene = new THREE.Scene();
         this.scene.background = new THREE.Color(0x87CEEB);
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -25,52 +16,70 @@ class Game {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(this.renderer.domElement);
 
-        // 3. MUNDO Y PERSONAJE
         this.world = new World(this.scene);
         this.saveSystem = new SaveSystem();
-        
-        // Pasamos la skin al mundo para que cree el avatar
-        await this.world.generateInitialTerrain();
-        this.createPlayerAvatar();
-
         this.controls = new PointerLockControls(this.camera, document.body);
-        this.setupMenu();
+
+        const light = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
+        this.scene.add(light);
+
+        this.setupButtons();
         this.animate();
     }
 
-    createPlayerAvatar() {
-        // Si hay una skin personalizada, la cargamos como textura
-        const loader = new THREE.TextureLoader();
-        const skinTexture = this.playerData.skin 
-            ? loader.load(this.playerData.skin) 
-            : loader.load('https://minecraft.net/static/theme/img/characters/steve.png');
-        
-        // Filtro para que no se vea borrosa (Pixel Art)
-        skinTexture.magFilter = THREE.NearestFilter;
+    setupButtons() {
+        // SERVIDOR OFICIAL
+        document.getElementById('official-server').onclick = () => {
+            this.world.setSeed("test1_02/03/2026");
+            this.startGame();
+        };
 
-        const geometry = new THREE.BoxGeometry(0.6, 1.8, 0.6);
-        const material = new THREE.MeshLambertMaterial({ map: skinTexture });
-        this.avatar = new THREE.Mesh(geometry, material);
-        
-        // Lo ponemos en la escena (aunque tú no te ves a ti mismo en 1ª persona)
-        // Esto servirá para cuando hagamos el Multijugador
-        this.scene.add(this.avatar);
+        // UN JUGADOR
+        document.getElementById('btn-create').onclick = () => {
+            const n = prompt("Nombre del mundo:");
+            if(n) { this.saveSystem.saveNewWorld(n); this.updateWorldList(); }
+        };
+
+        document.getElementById('btn-play').onclick = () => {
+            if(this.selectedWorld) {
+                this.world.setSeed(this.selectedWorld.seed);
+                this.startGame();
+            }
+        };
+
+        // HOST MULTIJUGADOR (PRUEBAS)
+        document.getElementById('btn-host').onclick = () => {
+            const peer = new Peer();
+            peer.on('open', (id) => alert("ID de tu servidor: " + id));
+            this.world.setSeed(Date.now());
+            this.startGame();
+        };
+
+        this.updateWorldList();
     }
 
-    setupMenu() {
-        const btn = document.getElementById('playBtn');
-        if(btn) btn.addEventListener('click', () => this.controls.lock());
+    updateWorldList() {
+        const list = document.getElementById('world-list');
+        list.innerHTML = '';
+        this.saveSystem.getWorlds().forEach(w => {
+            const div = document.createElement('div');
+            div.className = 'item';
+            div.innerText = w.name;
+            div.onclick = () => this.selectedWorld = w;
+            list.appendChild(div);
+        });
+    }
+
+    async startGame() {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById('crosshair').style.display = 'block';
+        await this.world.generateInitialTerrain();
+        this.camera.position.set(25, 10, 25);
+        this.controls.lock();
     }
 
     animate() {
         requestAnimationFrame(() => this.animate());
-        
-        // El avatar sigue a la cámara (para el multijugador)
-        if(this.avatar) {
-            this.avatar.position.copy(this.camera.position);
-            this.avatar.position.y -= 1; 
-        }
-
         this.renderer.render(this.scene, this.camera);
     }
 }
