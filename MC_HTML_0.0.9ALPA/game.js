@@ -20,7 +20,7 @@ function init() {
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x87CEEB);
     
-    // Niebla Exponencial (Más suave que la fija de 60)
+    // Niebla Exponencial (Más suave que la fija)
     scene.fog = new THREE.FogExp2(0x87CEEB, settings.fog);
 
     camera = new THREE.PerspectiveCamera(settings.fov, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -67,7 +67,7 @@ function takeDamage(amt) {
     health -= amt;
     for (let i = 0; i < 10; i++) {
         const heart = document.getElementById(`heart-${i}`);
-        if (i >= health) heart.classList.add('empty');
+        if (heart && i >= health) heart.classList.add('empty');
     }
     if (health <= 0) die();
 }
@@ -90,7 +90,7 @@ function setupUIListeners() {
 
     const fogS = document.getElementById('slider-fog');
     fogS.oninput = () => {
-        let val = fogS.value / 500; // Convertir a escala exponencial
+        let val = fogS.value / 500; 
         settings.fog = val;
         document.getElementById('val-fog').innerText = fogS.value;
         scene.fog.density = val;
@@ -113,6 +113,7 @@ async function loadWorld() {
     }
 
     camera.position.set(0, 15, 0);
+    lastY = 15;
     isLoaded = true;
     showScreen('none');
     controls.lock();
@@ -150,7 +151,7 @@ function animate() {
 
     velocity.x -= velocity.x * 10 * delta;
     velocity.z -= velocity.z * 10 * delta;
-    velocity.y -= 25 * delta; // Gravedad
+    velocity.y -= 25 * delta; 
 
     if (moveForward) velocity.z -= 150 * delta;
     if (moveBackward) velocity.z += 150 * delta;
@@ -161,17 +162,15 @@ function animate() {
     controls.moveRight(velocity.x * delta);
     camera.position.y += velocity.y * delta;
 
-    // COLISIONES MEJORADAS (Punto 4)
+    // COLISIONES Y DAÑO
     let ground = false;
     const px = camera.position.x, py = camera.position.y, pz = camera.position.z;
     
     for (let i = 0; i < worldBlocks.length; i++) {
         const b = worldBlocks[i];
-        // Detección de radio (Cilindro del jugador)
         if (Math.abs(px - b.position.x) < 0.7 && Math.abs(pz - b.position.z) < 0.7) {
-            // Detección de altura (Pies del jugador)
             if (py - b.position.y < 2.1 && py - b.position.y > 1.0) {
-                // Daño por caída
+                // Calcular daño por caída antes de resetear posición
                 let fallDist = lastY - py;
                 if(fallDist > 6) takeDamage(Math.floor(fallDist - 5));
                 
@@ -184,14 +183,13 @@ function animate() {
         }
     }
     canJump = ground;
+    if (!ground && py > lastY) lastY = py; // Actualizar punto más alto del salto
 
-    // Si cae al vacío (muerte instantánea)
     if (py < -50) takeDamage(10);
 
     renderer.render(scene, camera);
 }
 
-// Eventos de teclado
 document.getElementById('btn-play-alpha').onclick = () => init();
 document.getElementById('btn-resume').onclick = () => controls.lock();
 
