@@ -7,27 +7,36 @@ let scene, camera, renderer, player, world, multiplayer;
 let clock = new THREE.Clock();
 let keys = {};
 
-window.initGame = async function(isHost = false, joinId = null) {
-    // 1. Configuración básica
+window.startGame = async function(worldName, isHost = false, joinId = null) {
+    init(isHost, joinId);
+};
+
+async function init(isHost, joinId) {
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x87ceeb);
+
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
     document.body.appendChild(renderer.domElement);
 
-    const light = new THREE.HemisphereLight(0xeeeeff, 0x777788, 1);
-    scene.add(light);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+    scene.add(ambientLight);
+    const sunLight = new THREE.DirectionalLight(0xffffff, 0.6);
+    sunLight.position.set(50, 100, 50);
+    scene.add(sunLight);
 
-    // 2. Inicializar clases
     world = new World(scene);
     player = new Player(scene, camera, world);
     multiplayer = new Multiplayer(camera, scene);
 
-    // 3. Carga de terreno y Spawn
+    // Pantalla de carga y generación inicial
     document.getElementById('loading-screen').classList.add('active');
     await world.generateInitialTerrain();
     
+    // Spawn en la superficie más alta en 0,0
     const spawnY = world.getHeight(0, 0) + 2;
     player.controls.getObject().position.set(0, spawnY, 0);
 
@@ -36,20 +45,33 @@ window.initGame = async function(isHost = false, joinId = null) {
 
     document.getElementById('loading-screen').classList.remove('active');
     animate();
-};
+}
 
-window.setPause = (state) => { if(player) state ? player.controls.unlock() : player.controls.lock(); };
+window.setPause = (state) => {
+    if (!player) return;
+    state ? player.controls.unlock() : player.controls.lock();
+};
 
 window.addEventListener("keydown", (e) => keys[e.key.toLowerCase()] = true);
 window.addEventListener("keyup", (e) => keys[e.key.toLowerCase()] = false);
-window.addEventListener("keydown", (e) => { if(e.code === "Space" && player) player.jump(); });
+window.addEventListener("keydown", (e) => {
+    if (e.code === "Space" && player) player.jump();
+});
 
 function animate() {
     requestAnimationFrame(animate);
-    let delta = clock.getDelta();
+    const delta = clock.getDelta();
+
     if (player && player.controls.isLocked) {
         player.update(keys, delta);
         if (multiplayer) multiplayer.update();
     }
+
     renderer.render(scene, camera);
 }
+
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
