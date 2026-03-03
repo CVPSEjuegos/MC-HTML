@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>MC-HTML 0.0.9 ALPHA Gold</title>
+    <title>MC-HTML 0.0.9 ALPHA Gold Fix</title>
     <style>
         body { margin: 0; overflow: hidden; background-color: #87ceeb; font-family: 'Courier New', Courier, monospace; }
         #crosshair {
@@ -15,7 +15,7 @@
             background: rgba(0,0,0,0.85); display: flex; flex-direction: column;
             justify-content: center; align-items: center; z-index: 20;
         }
-        #loading-screen { display: none; color: white; text-align: center; }
+        #loading-screen { display: none; }
         .loader-bar { width: 300px; height: 20px; background: #333; border: 3px solid #000; margin-top: 10px; }
         #progress { width: 0%; height: 100%; background: #448032; }
         .btn {
@@ -39,14 +39,11 @@
     <div id="main-menu" class="overlay">
         <h1 style="color: #448032; font-size: 50px; text-shadow: 4px 4px #000;">MC-HTML GOLD</h1>
         <button class="btn" id="btn-play-alpha">Jugar Solitario</button>
-        <button class="btn" id="btn-host">Hostear Mundo</button>
-        <button class="btn" id="btn-join">Unirse a Mundo</button>
     </div>
 
     <div id="loading-screen" class="overlay">
-        <h1>Generando Terreno...</h1>
+        <h1 style="color: white;">Cargando Mundo...</h1>
         <div class="loader-bar"><div id="progress"></div></div>
-        <p id="status">0%</p>
     </div>
 
     <div id="esc-menu" class="overlay" style="display: none;">
