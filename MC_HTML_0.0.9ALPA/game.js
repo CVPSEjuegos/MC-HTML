@@ -1,142 +1,143 @@
 import * as THREE from 'three';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 
-let scene, camera, renderer, controls, hand;
+let scene, camera, renderer, controls;
 let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
-let canJump = false, prevTime = performance.now();
+let canJump = false, lastTime = performance.now();
 const velocity = new THREE.Vector3();
 
+// Variables de Mundo y Optimización
 let worldBlocks = [];
-let renderDist = 6; 
-const CHUNK_SIZE = 16;
-const BLOCK_TYPES = { 1: 0x448032, 2: 0x5d3a1a, 3: 0x777777, 4: 0x3a2614, 5: 0x2d4c1e, 6: 0x999999, 7: 0x222222, 8: 0xd4af37, 9: 0xffffff };
-let selectedSlot = 1;
 let isLoaded = false;
+const CHUNK_SIZE = 16;
+const RENDER_DIST = 4; // Radio optimizado para evitar lag
+
+// Ajustes por defecto
+let settings = { fov: 60, fps: 120, fog: 10 };
 
 function init() {
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x87CEEB);
-    scene.fog = new THREE.Fog(0x87CEEB, 1, 50);
+    scene.fog = new THREE.Fog(0x87CEEB, 1, settings.fog);
 
-    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera = new THREE.PerspectiveCamera(settings.fov, window.innerWidth / window.innerHeight, 0.1, 1000);
+    
     renderer = new THREE.WebGLRenderer({ antialias: false });
     renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(1); // Optimización para pantallas 4K/Retina
     document.body.appendChild(renderer.domElement);
 
     scene.add(new THREE.AmbientLight(0xffffff, 0.8));
-    const sun = new THREE.DirectionalLight(0xffffff, 0.6);
-    sun.position.set(10, 20, 10);
-    scene.add(sun);
-
+    
     controls = new PointerLockControls(camera, document.body);
 
-    hand = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.4, 0.8), new THREE.MeshStandardMaterial({ color: 0xdbac82 }));
-    camera.add(hand);
-    hand.position.set(0.6, -0.5, -0.7);
-    scene.add(camera);
-
-    // FIX MENÚ PAUSA
+    // Eventos de Menú
     controls.addEventListener('lock', () => {
-        document.getElementById('esc-menu').style.display = 'none';
+        showScreen('none');
         document.getElementById('crosshair').style.display = 'block';
     });
 
     controls.addEventListener('unlock', () => {
-        if (isLoaded) {
-            document.getElementById('esc-menu').style.display = 'flex';
+        if(isLoaded) {
+            showScreen('esc-menu');
             document.getElementById('crosshair').style.display = 'none';
         }
     });
 
-    window.addEventListener('mousedown', (e) => {
-        if (!controls.isLocked) return;
-        if (e.button === 0) performAction('break');
-        if (e.button === 2) performAction('place');
-    });
+    // Escuchar cambios en los Sliders
+    setupUIListeners();
 
-    generateWorld();
+    loadWorld();
 }
 
-async function generateWorld() {
-    document.getElementById('main-menu').style.display = 'none';
-    document.getElementById('loading-screen').style.display = 'flex';
+function setupUIListeners() {
+    const fovS = document.getElementById('slider-fov');
+    fovS.oninput = () => {
+        settings.fov = fovS.value;
+        document.getElementById('val-fov').innerText = settings.fov;
+        camera.fov = parseInt(settings.fov);
+        camera.updateProjectionMatrix();
+    };
+
+    const fpsS = document.getElementById('slider-fps');
+    fpsS.oninput = () => {
+        settings.fps = fpsS.value;
+        document.getElementById('val-fps').innerText = settings.fps;
+    };
+
+    const fogS = document.getElementById('slider-fog');
+    fogS.oninput = () => {
+        settings.fog = fogS.value;
+        document.getElementById('val-fog').innerText = settings.fog;
+        scene.fog.far = parseInt(settings.fog);
+    };
+}
+
+async function loadWorld() {
+    showScreen('loading-screen');
     const progress = document.getElementById('progress');
+    
+    const total = (RENDER_DIST * 2 + 1) * (RENDER_DIST * 2 + 1);
+    let count = 0;
 
-    const totalChunks = (renderDist * 2 + 1) * (renderDist * 2 + 1);
-    let current = 0;
-
-    for (let x = -renderDist; x <= renderDist; x++) {
-        for (let z = -renderDist; z <= renderDist; z++) {
-            buildChunk(x, z);
-            current++;
-            progress.style.width = Math.floor((current / totalChunks) * 100) + "%";
-            if (current % 2 === 0) await new Promise(r => setTimeout(r, 1));
+    for (let x = -RENDER_DIST; x <= RENDER_DIST; x++) {
+        for (let z = -RENDER_DIST; z <= RENDER_DIST; z++) {
+            createChunk(x, z);
+            count++;
+            progress.style.width = (count / total * 100) + "%";
+            if(count % 2 === 0) await new Promise(r => setTimeout(r, 1));
         }
     }
 
     respawn();
     isLoaded = true;
-    document.getElementById('loading-screen').style.display = 'none';
+    showScreen('none');
     controls.lock();
     animate();
 }
 
-function buildChunk(cx, cz) {
+function createChunk(cx, cz) {
     const geo = new THREE.BoxGeometry(1, 1, 1);
     for (let x = 0; x < CHUNK_SIZE; x++) {
         for (let z = 0; z < CHUNK_SIZE; z++) {
             const wx = cx * CHUNK_SIZE + x;
             const wz = cz * CHUNK_SIZE + z;
-            const h = Math.floor(Math.sin(wx * 0.1) * Math.cos(wz * 0.1) * 3) + 5;
+            const h = Math.floor(Math.sin(wx * 0.1) * Math.cos(wz * 0.1) * 3) + 4;
 
             for (let y = 0; y <= h; y++) {
-                let color = (y < h - 2) ? BLOCK_TYPES[3] : (y < h ? BLOCK_TYPES[2] : BLOCK_TYPES[1]);
-                const block = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color }));
-                block.position.set(wx, y, wz);
-                scene.add(block);
-                worldBlocks.push(block);
+                // Solo renderizar bloques de superficie o cerca de ella para quitar lag
+                if (y > h - 2) {
+                    const color = (y === h) ? 0x448032 : 0x5d3a1a;
+                    const b = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color }));
+                    b.position.set(wx, y, wz);
+                    scene.add(b);
+                    worldBlocks.push(b);
+                }
             }
         }
     }
 }
 
 function respawn() {
-    let maxY = 10;
-    worldBlocks.forEach(b => {
-        if(Math.abs(b.position.x) < 2 && Math.abs(b.position.z) < 2) {
-            if(b.position.y > maxY) maxY = b.position.y;
-        }
-    });
-    camera.position.set(0, maxY + 3, 0);
-    velocity.set(0,0,0);
-}
-
-function performAction(type) {
-    const ray = new THREE.Raycaster();
-    ray.setFromCamera(new THREE.Vector2(0, 0), camera);
-    const hit = ray.intersectObjects(worldBlocks);
-    if (hit.length > 0 && hit[0].distance < 5) {
-        if (type === 'break') {
-            scene.remove(hit[0].object);
-            worldBlocks = worldBlocks.filter(b => b !== hit[0].object);
-        } else {
-            const b = new THREE.Mesh(new THREE.BoxGeometry(1,1,1), new THREE.MeshStandardMaterial({color: BLOCK_TYPES[selectedSlot]}));
-            b.position.copy(hit[0].object.position).add(hit[0].face.normal);
-            scene.add(b); worldBlocks.push(b);
-        }
-    }
+    camera.position.set(0, 20, 0);
+    velocity.set(0, 0, 0);
 }
 
 function animate() {
-    requestAnimationFrame(animate);
+    // Limitador de FPS
+    setTimeout(() => {
+        requestAnimationFrame(animate);
+    }, 1000 / settings.fps);
+
     if (!controls.isLocked) return;
 
     const time = performance.now();
-    const delta = Math.min((time - prevTime) / 1000, 0.05);
+    const delta = (time - lastTime) / 1000;
+    lastTime = time;
 
     velocity.x -= velocity.x * 10 * delta;
     velocity.z -= velocity.z * 10 * delta;
-    velocity.y -= 22 * delta; 
+    velocity.y -= 25 * delta;
 
     if (moveForward) velocity.z -= 150 * delta;
     if (moveBackward) velocity.z += 150 * delta;
@@ -147,20 +148,14 @@ function animate() {
     controls.moveRight(velocity.x * delta);
     camera.position.y += velocity.y * delta;
 
-    // COLISIÓN Y MUERTE
-    let ground = false;
-    const px = camera.position.x, py = camera.position.y, pz = camera.position.z;
-
-    // SISTEMA DE MUERTE -120
-    if (py < -120) {
-        document.getElementById('death-msg').style.display = 'block';
-        setTimeout(() => {
-            document.getElementById('death-msg').style.display = 'none';
-            respawn();
-        }, 1500);
+    // Colisión y Muerte
+    if (camera.position.y < -120) {
+        respawn();
     }
 
-    // Colisión optimizada: solo bloques en un radio de 2 unidades
+    // Colisión optimizada (solo bloques muy cerca)
+    let ground = false;
+    const px = camera.position.x, py = camera.position.y, pz = camera.position.z;
     for (let i = 0; i < worldBlocks.length; i++) {
         const b = worldBlocks[i];
         if (Math.abs(px - b.position.x) < 0.6 && Math.abs(pz - b.position.z) < 0.6) {
@@ -172,14 +167,13 @@ function animate() {
             }
         }
     }
-
     canJump = ground;
-    hand.position.y = -0.5 + Math.sin(time * 0.008) * 0.02;
+
     renderer.render(scene, camera);
-    prevTime = time;
 }
 
-document.getElementById('btn-play').onclick = () => init();
+// Controles de teclado
+document.getElementById('btn-play-alpha').onclick = () => init();
 document.getElementById('btn-resume').onclick = () => controls.lock();
 
 document.addEventListener('keydown', (e) => {
@@ -188,14 +182,6 @@ document.addEventListener('keydown', (e) => {
     if (e.code === 'KeyA') moveLeft = true;
     if (e.code === 'KeyD') moveRight = true;
     if (e.code === 'Space' && canJump) velocity.y = 8;
-    if (e.code.startsWith('Digit')) {
-        let n = e.code.replace('Digit','');
-        if (BLOCK_TYPES[n]) {
-            selectedSlot = n;
-            document.querySelectorAll('.slot').forEach(s => s.classList.remove('selected'));
-            document.getElementById('slot' + n).classList.add('selected');
-        }
-    }
 });
 
 document.addEventListener('keyup', (e) => {
