@@ -2,9 +2,9 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>MC-HTML 0.0.9 ALPHA Gold Fix</title>
+    <title>MC-HTML 0.0.9 ALPHA Gold (Stable)</title>
     <style>
-        body { margin: 0; overflow: hidden; background-color: #87ceeb; font-family: 'Courier New', Courier, monospace; }
+        body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Courier New', Courier, monospace; }
         #crosshair {
             position: fixed; top: 50%; left: 50%; width: 20px; height: 20px;
             border: 2px solid white; transform: translate(-50%, -50%);
@@ -12,42 +12,44 @@
         }
         .overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); display: flex; flex-direction: column;
+            background: rgba(0,0,0,0.9); display: flex; flex-direction: column;
             justify-content: center; align-items: center; z-index: 20;
         }
-        #loading-screen { display: none; }
-        .loader-bar { width: 300px; height: 20px; background: #333; border: 3px solid #000; margin-top: 10px; }
-        #progress { width: 0%; height: 100%; background: #448032; }
+        #loading-screen { display: none; color: white; }
+        .loader-bar { width: 300px; height: 10px; background: #222; border: 2px solid #fff; margin-top: 15px; }
+        #progress { width: 0%; height: 100%; background: #448032; transition: width 0.1s; }
         .btn {
-            padding: 15px 30px; margin: 10px; background: #555; color: white;
-            border: 4px solid #000; cursor: pointer; min-width: 250px; font-size: 20px;
-            text-transform: uppercase; font-weight: bold;
+            padding: 15px 30px; margin: 10px; background: #333; color: white;
+            border: 4px solid #000; cursor: pointer; min-width: 250px; font-size: 18px;
+            text-transform: uppercase;
         }
-        .btn:hover { background: #777; border-color: #448032; }
+        .btn:hover { background: #555; border-color: #448032; }
         #hotbar {
             position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
             display: flex; gap: 4px; background: rgba(0,0,0,0.8); padding: 5px;
-            border: 3px solid #111; z-index: 15;
+            border: 2px solid #555; z-index: 15;
         }
-        .slot { width: 45px; height: 45px; border: 3px solid #555; display: flex; justify-content: center; align-items: center; color: white; font-size: 8px; font-weight: bold; }
-        .selected { border-color: white !important; box-shadow: 0 0 10px white; }
+        .slot { width: 40px; height: 40px; border: 2px solid #333; display: flex; justify-content: center; align-items: center; color: white; font-size: 10px; }
+        .selected { border-color: #fff !important; box-shadow: 0 0 8px #fff; }
+        #info { position: fixed; top: 10px; left: 10px; color: white; font-size: 12px; z-index: 10; pointer-events: none; }
     </style>
 </head>
 <body>
+    <div id="info">F: Ajustar Renderizado | 1-9: Bloques</div>
     <div id="crosshair"></div>
 
     <div id="main-menu" class="overlay">
-        <h1 style="color: #448032; font-size: 50px; text-shadow: 4px 4px #000;">MC-HTML GOLD</h1>
-        <button class="btn" id="btn-play-alpha">Jugar Solitario</button>
+        <h1 style="color: #448032;">MC-HTML GOLD STABLE</h1>
+        <button class="btn" id="btn-play">Jugar Solitario</button>
     </div>
 
     <div id="loading-screen" class="overlay">
-        <h1 style="color: white;">Cargando Mundo...</h1>
+        <h1>Construyendo mundo...</h1>
         <div class="loader-bar"><div id="progress"></div></div>
     </div>
 
     <div id="esc-menu" class="overlay" style="display: none;">
-        <h2 style="color: white;">PAUSA</h2>
+        <h2>PAUSA</h2>
         <button class="btn" id="btn-resume">Reanudar</button>
         <button class="btn" onclick="location.reload()">Salir</button>
     </div>
@@ -61,10 +63,9 @@
         <div id="slot6" class="slot" style="background: #999;">ARE</div>
         <div id="slot7" class="slot" style="background: #222;">OBS</div>
         <div id="slot8" class="slot" style="background: #d4af37;">ORO</div>
-        <div id="slot9" class="slot" style="background: #f0f0f0; color:#000;">NIE</div>
+        <div id="slot9" class="slot" style="background: #eee; color: #000;">NIE</div>
     </div>
 
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <script type="importmap">
         { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
     </script>
