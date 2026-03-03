@@ -2,103 +2,60 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>MC-HTML Alpha 0.0.5</title>
+    <title>MC-HTML Alpha 0.0.1</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         body { margin: 0; overflow: hidden; background: #000; font-family: 'Segoe UI', sans-serif; color: white; }
         canvas { display: block; }
-        
-        /* Pantallas de Menú */
         .screen { position: absolute; width: 100%; height: 100%; display: none; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.85); z-index: 20; }
         .active { display: flex !important; }
-        
-        /* Botones estilo Minecraft */
         .btn-group { display: flex; flex-direction: column; gap: 10px; width: 350px; }
-        .btn { padding: 12px; background: #444; color: white; border: 2px solid #000; cursor: pointer; font-weight: bold; font-size: 16px; transition: 0.1s; outline: none; }
-        .btn:hover { background: #555; border-color: #fff; }
-        .btn:active { background: #222; }
-        
-        /* HUD Juego */
-        #crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: rgba(255,255,255,0.7); font-size: 24px; display: none; pointer-events: none; z-index: 5; font-weight: 100; }
-        
-        /* HOTBAR */
-        #hotbar { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); display: none; gap: 4px; background: rgba(0,0,0,0.6); padding: 4px; border: 2px solid #111; z-index: 10; }
-        .slot { width: 44px; height: 44px; background: #444; border: 3px solid #222; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #ccc; box-shadow: inset 2px 2px 0 rgba(255,255,255,0.1); }
-        .slot.active-slot { border-color: #ffffff; background: #666; transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
-
-        /* Mundos y Carga */
-        #world-list { width: 400px; height: 200px; background: #222; border: 2px solid #555; overflow-y: auto; margin-bottom: 15px; padding: 10px; }
-        .world-item { padding: 10px; background: #333; margin-bottom: 5px; border: 1px solid #444; cursor: pointer; }
-        .world-item.selected { border-color: #fff; background: #555; }
-        
-        #loading-bar-container { width: 300px; height: 20px; background: #222; border: 2px solid #000; margin-top: 20px; }
-        #loading-bar { width: 0%; height: 100%; background: #3e6a3e; transition: width 0.1s; }
-
-        /* Menú F3 Debug */
-        #debug-menu { position: fixed; top: 10px; left: 10px; background: rgba(0,0,0,0.5); padding: 10px; display: none; z-index: 100; font-family: monospace; font-size: 14px; pointer-events: none; }
+        .btn { padding: 12px; background: #444; color: white; border: 2px solid #000; cursor: pointer; font-weight: bold; font-size: 16px; }
+        .btn:hover { background: #666; border-color: #fff; }
+        #crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 24px; display: none; pointer-events: none; z-index: 5; }
+        #network-status { position: fixed; top: 10px; right: 10px; font-size: 12px; z-index: 100; }
     </style>
 </head>
 <body>
 
-    <div id="debug-menu">
-        <b>MC-HTML 0.0.5 ALPHA</b><br>
-        XYZ: <span id="val-pos">0 / 0 / 0</span><br>
-        Chunk: <span id="val-chunk">0, 0</span><br>
-        Seed: <span id="val-seed">0</span><br>
-        Peer ID: <span id="val-peer">---</span>
-    </div>
-
-    <div id="loading-screen" class="screen" style="background: #111; z-index: 100;">
-        <h1 id="loading-text">GENERANDO MUNDO...</h1>
-        <div id="loading-bar-container"><div id="loading-bar"></div></div>
-    </div>
-
+    <div id="network-status">Comprobando conexión...</div>
     <div id="crosshair">+</div>
 
-    <div id="hotbar">
-        <div class="slot active-slot" id="slot-0">1</div>
-        <div class="slot" id="slot-1">2</div>
-        <div class="slot" id="slot-2">3</div>
-        <div class="slot" id="slot-3">4</div>
-        <div class="slot" id="slot-4">5</div>
-        <div class="slot" id="slot-5">6</div>
-        <div class="slot" id="slot-6">7</div>
-        <div class="slot" id="slot-7">8</div>
-        <div class="slot" id="slot-8">9</div>
-    </div>
-
     <div id="main-menu" class="screen active">
-        <h1 style="letter-spacing: 5px;">HTML-CRAFT <span style="font-size: 12px; color: #aaa;">0.0.5</span></h1>
+        <h1>HTML-CRAFT ALPHA</h1>
         <div class="btn-group">
-            <button class="btn" onclick="showScreen('singleplayer')">UN JUGADOR</button>
-            <button class="btn" onclick="showScreen('multiplayer-menu')">MULTIJUGADOR</button>
+            <button class="btn" onclick="showScreen('singleplayer')">Un Jugador</button>
+            <button class="btn" onclick="showScreen('multiplayer')">Multijugador</button>
         </div>
     </div>
 
     <div id="singleplayer" class="screen">
-        <h2>MUNDOS LOCALES</h2>
-        <div id="world-list"></div>
+        <h2>Mundos Locales</h2>
         <div class="btn-group">
-            <button class="btn" id="btn-play-selected">JUGAR MUNDO SELECCIONADO</button>
-            <button class="btn" id="btn-create-world" style="background: #3e6a3e;">CREAR NUEVO MUNDO</button>
-            <button class="btn" onclick="showScreen('main-menu')">VOLVER</button>
+            <button class="btn" id="btn-play-alpha">Cargar Mundo Alpha</button>
+            <button class="btn" onclick="showScreen('main-menu')">Volver</button>
         </div>
     </div>
 
-    <div id="multiplayer-menu" class="screen">
-        <h2>MULTIJUGADOR</h2>
-        <div class="btn-group">
-            <button class="btn" onclick="startMP(true)">CREAR SERVIDOR (HOST)</button>
-            <button class="btn" onclick="startMP(false)">UNIRSE A ID</button>
-            <button class="btn" onclick="showScreen('main-menu')">VOLVER</button>
+    <div id="multiplayer" class="screen">
+        <h2>Multijugador</h2>
+        <div id="server-list" style="width: 450px; background: #222; border: 2px solid #555; margin-bottom: 15px; padding: 10px;">
+            <div style="padding: 10px; background: #333; cursor: pointer;" onclick="window.conectarServidor('OFFICIAL_TEST_2026')">
+                🌐 SERVIDOR OFICIAL (Alpha Test)
+            </div>
+        </div>
+        <div class="btn-group" style="flex-direction: row; width: 500px;">
+            <button class="btn" style="flex:1" id="btn-host">Crear Servidor</button>
+            <button class="btn" style="flex:1" id="btn-join">Unirse ID</button>
+            <button class="btn" style="flex:1" onclick="showScreen('main-menu')">Volver</button>
         </div>
     </div>
 
     <div id="esc-menu" class="screen">
         <h2>PAUSA</h2>
         <div class="btn-group">
-            <button class="btn" onclick="resumeGame()">REANUDAR JUEGO</button>
-            <button class="btn" onclick="location.reload()">SALIR AL MENÚ</button>
+            <button class="btn" id="btn-resume">Reanudar</button>
+            <button class="btn" onclick="location.reload()">Salir al Menú</button>
         </div>
     </div>
 
@@ -110,77 +67,25 @@
         }
     }
     </script>
-
     <script>
-        let selectedWorldName = null;
-
         window.showScreen = function(id) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            if(id !== 'none') document.getElementById(id).classList.add('active');
+            document.querySelectorAll('.screen').forEach(s => {
+                s.classList.remove('active');
+                s.style.display = 'none';
+            });
+            const target = document.getElementById(id);
+            if (target) {
+                target.classList.add('active');
+                target.style.display = 'flex';
+            }
         };
 
-        function refreshWorldList() {
-            const list = document.getElementById('world-list');
-            list.innerHTML = '';
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                if (key.startsWith('MC_HTML_')) {
-                    const name = key.replace('MC_HTML_', '');
-                    const div = document.createElement('div');
-                    div.className = 'world-item';
-                    div.innerText = "🌍 " + name;
-                    div.onclick = function() {
-                        document.querySelectorAll('.world-item').forEach(el => el.classList.remove('selected'));
-                        this.classList.add('selected');
-                        selectedWorldName = name;
-                    };
-                    list.appendChild(div);
-                }
-            }
+        function updateNet() {
+            document.getElementById('network-status').innerHTML = navigator.onLine ? "🟢 Online" : "🔴 Offline";
         }
-
-        document.getElementById('btn-create-world').addEventListener('click', () => {
-            const name = prompt("Nombre del mundo:");
-            if(name) {
-                localStorage.setItem('MC_HTML_' + name, JSON.stringify({created: true}));
-                refreshWorldList();
-            }
-        });
-
-        document.getElementById('btn-play-selected').addEventListener('click', () => {
-            if(!selectedWorldName) return alert("Selecciona un mundo primero");
-            launchGame();
-        });
-
-        function launchGame(isHost = false, joinId = null) {
-            showScreen('none');
-            document.getElementById('crosshair').style.display = 'block';
-            document.getElementById('hotbar').style.display = 'flex';
-            if(window.startGame) window.startGame(selectedWorldName, isHost, joinId);
-        }
-
-        window.startMP = function(isHost) {
-            let id = isHost ? null : prompt("ID del Host:");
-            launchGame(isHost, id);
-        };
-
-        window.resumeGame = function() {
-            showScreen('none');
-            if(window.setPause) window.setPause(false);
-        };
-
-        window.addEventListener('keydown', e => {
-            if(e.key === "Escape" && !document.getElementById('main-menu').classList.contains('active')) {
-                showScreen('esc-menu');
-                if(window.setPause) window.setPause(true);
-            }
-            if(e.key.toLowerCase() === "f3") {
-                const debug = document.getElementById('debug-menu');
-                debug.style.display = debug.style.display === 'none' ? 'block' : 'none';
-            }
-        });
-
-        refreshWorldList();
+        window.addEventListener('online', updateNet);
+        window.addEventListener('offline', updateNet);
+        updateNet();
     </script>
     <script type="module" src="game.js"></script>
 </body>
