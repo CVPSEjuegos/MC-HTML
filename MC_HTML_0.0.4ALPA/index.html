@@ -8,58 +8,37 @@
         body { margin: 0; overflow: hidden; background: #000; font-family: 'Segoe UI', sans-serif; color: white; }
         canvas { display: block; }
         
-        /* Pantallas de Menú */
         .screen { position: absolute; width: 100%; height: 100%; display: none; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.85); z-index: 20; }
         .active { display: flex !important; }
         
-        /* Botones estilo Minecraft */
         .btn-group { display: flex; flex-direction: column; gap: 10px; width: 350px; }
         .btn { padding: 12px; background: #444; color: white; border: 2px solid #000; cursor: pointer; font-weight: bold; font-size: 16px; transition: 0.1s; outline: none; }
         .btn:hover { background: #555; border-color: #fff; }
         .btn:active { background: #222; }
         
-        /* HUD Juego */
         #crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: rgba(255,255,255,0.7); font-size: 24px; display: none; pointer-events: none; z-index: 5; font-weight: 100; }
         
-        /* --- HOTBAR --- */
-        #hotbar {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: none; 
-            gap: 4px;
-            background: rgba(0,0,0,0.6);
-            padding: 4px;
-            border: 2px solid #111;
-            z-index: 10;
-        }
-        .slot {
-            width: 44px;
-            height: 44px;
-            background: #444;
-            border: 3px solid #222;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            color: #ccc;
-            box-shadow: inset 2px 2px 0 rgba(255,255,255,0.1);
-        }
-        .slot.active-slot {
-            border-color: #ffffff;
-            background: #666;
-            transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-        }
+        #hotbar { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); display: none; gap: 4px; background: rgba(0,0,0,0.6); padding: 4px; border: 2px solid #111; z-index: 10; }
+        .slot { width: 44px; height: 44px; background: #444; border: 3px solid #222; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #ccc; box-shadow: inset 2px 2px 0 rgba(255,255,255,0.1); }
+        .slot.active-slot { border-color: #ffffff; background: #666; transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
 
-        /* Lista de Mundos */
         #world-list { width: 400px; height: 200px; background: #222; border: 2px solid #555; overflow-y: auto; margin-bottom: 15px; padding: 10px; }
         .world-item { padding: 10px; background: #333; margin-bottom: 5px; border: 1px solid #444; cursor: pointer; }
         .world-item.selected { border-color: #fff; background: #555; }
+
+        /* NUEVO: Estilo F3 */
+        #debug-menu { position: fixed; top: 10px; left: 10px; background: rgba(0,0,0,0.5); padding: 10px; display: none; z-index: 100; font-family: monospace; font-size: 14px; pointer-events: none; }
     </style>
 </head>
 <body>
+
+    <div id="debug-menu">
+        MC-HTML 0.0.5 Alpha<br>
+        XYZ: <span id="val-pos">0 / 0 / 0</span><br>
+        Chunk: <span id="val-chunk">0, 0</span><br>
+        Seed: <span id="val-seed">0</span><br>
+        Peer ID: <span id="val-peer">---</span>
+    </div>
 
     <div id="crosshair">+</div>
 
@@ -79,7 +58,7 @@
         <h1 style="letter-spacing: 5px;">HTML-CRAFT <span style="font-size: 12px; color: #aaa;">0.0.5</span></h1>
         <div class="btn-group">
             <button class="btn" onclick="showScreen('singleplayer')">UN JUGADOR</button>
-            <button class="btn" onclick="showScreen('multiplayer')">MULTIJUGADOR</button>
+            <button class="btn" onclick="showScreen('multiplayer-menu')">MULTIJUGADOR</button>
         </div>
     </div>
 
@@ -89,7 +68,15 @@
         <div class="btn-group">
             <button class="btn" id="btn-play-selected">JUGAR MUNDO SELECCIONADO</button>
             <button class="btn" id="btn-create-world" style="background: #3e6a3e;">CREAR NUEVO MUNDO</button>
-            <button class="btn" id="btn-delete-world" style="background: #6a3e3e;">BORRAR MUNDO</button>
+            <button class="btn" onclick="showScreen('main-menu')">VOLVER</button>
+        </div>
+    </div>
+
+    <div id="multiplayer-menu" class="screen">
+        <h2>MULTIJUGADOR</h2>
+        <div class="btn-group">
+            <button class="btn" onclick="hostServer()">SER ANFITRIÓN (HOST)</button>
+            <button class="btn" onclick="joinServer()">UNIRSE A ID</button>
             <button class="btn" onclick="showScreen('main-menu')">VOLVER</button>
         </div>
     </div>
@@ -145,7 +132,7 @@
         document.getElementById('btn-create-world').addEventListener('click', () => {
             const name = prompt("Nombre del mundo:");
             if(name) {
-                localStorage.setItem('MC_HTML_' + name, JSON.stringify({created: true}));
+                localStorage.setItem('MC_HTML_' + name, JSON.stringify({created: true, seed: Math.random()}));
                 refreshWorldList();
             }
         });
@@ -158,21 +145,43 @@
             if(window.startGame) window.startGame(selectedWorldName);
         });
 
+        // Funciones Multiplayer
+        window.hostServer = function() {
+            showScreen('none');
+            document.getElementById('crosshair').style.display = 'block';
+            document.getElementById('hotbar').style.display = 'flex';
+            if(window.startGame) window.startGame("MP_HOST", true);
+        };
+
+        window.joinServer = function() {
+            const id = prompt("ID del anfitrión:");
+            if(id) {
+                showScreen('none');
+                document.getElementById('crosshair').style.display = 'block';
+                document.getElementById('hotbar').style.display = 'flex';
+                if(window.startGame) window.startGame("MP_JOIN", false, id);
+            }
+        };
+
         window.resumeGame = function() {
             showScreen('none');
             if(window.setPause) window.setPause(false);
         };
 
-        // Escuchar la tecla ESC
         window.addEventListener('keydown', e => {
             if(e.key === "Escape") {
                 const isMenuOpen = document.getElementById('main-menu').classList.contains('active') || 
-                                   document.getElementById('singleplayer').classList.contains('active');
-                
+                                   document.getElementById('singleplayer').classList.contains('active') ||
+                                   document.getElementById('multiplayer-menu').classList.contains('active');
                 if(!isMenuOpen) {
                     showScreen('esc-menu');
                     if(window.setPause) window.setPause(true);
                 }
+            }
+            // Tecla F3
+            if(e.key === "F3" || e.key === "f3") {
+                const menu = document.getElementById('debug-menu');
+                menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
             }
         });
 
