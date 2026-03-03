@@ -1,92 +1,85 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>MC_HTML Launcher Pro</title>
-    <style>
-        body { margin: 0; background: #1e1e1e; color: white; font-family: 'Segoe UI', sans-serif; display: flex; height: 100vh; overflow: hidden; }
-        
-        #sidebar { width: 220px; background: #252526; border-right: 2px solid #333; display: flex; flex-direction: column; justify-content: space-between; z-index: 10; }
-        .nav-group { display: flex; flex-direction: column; }
-        .side-btn { padding: 15px; cursor: pointer; border-bottom: 1px solid #333; text-align: left; padding-left: 25px; transition: 0.2s; color: #ccc; }
-        .side-btn:hover, .side-btn.active { background: #333; color: #448032; border-left: 4px solid #448032; }
-        
-        #content-area { flex-grow: 1; position: relative; overflow: hidden; background: #1e1e1e; }
-        .tab-content { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; animation: fadeIn 0.3s; }
-        .tab-content.active { display: flex; }
-
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        #tab-jugar { background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://www.transparenttextures.com/patterns/carbon-fibre.png'); }
-        h1 { font-size: 3.5rem; margin-bottom: 5px; }
-        
-        .skin-container { display: flex; gap: 30px; align-items: center; background: #2d2d2d; padding: 30px; border-radius: 8px; border: 1px solid #444; }
-        .skin-preview { width: 150px; height: 250px; background: #111; border: 2px solid #448032; display: flex; align-items: center; justify-content: center; font-size: 12px; }
-        #current-skin-img { max-width: 100%; max-height: 100%; image-rendering: pixelated; }
-
-        .play-section { background: #3c3c3c; width: 100%; padding: 20px; position: absolute; bottom: 0; display: flex; justify-content: center; align-items: center; gap: 20px; box-shadow: 0 -5px 15px rgba(0,0,0,0.5); }
-        .play-btn { background: #448032; color: white; border: none; padding: 15px 80px; font-size: 22px; cursor: pointer; font-weight: bold; box-shadow: inset 0 -4px 0 rgba(0,0,0,0.3); }
-        .play-btn:hover { background: #529b3d; transform: scale(1.02); }
-        
-        select, input { padding: 12px; background: #252526; color: white; border: 1px solid #555; border-radius: 4px; }
-        
-        iframe { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; border: none; z-index: 100; background: #000; }
-        
-        .license-link { padding: 15px; font-size: 11px; color: #666; text-decoration: none; text-align: center; border-top: 1px solid #333; }
-    </style>
+<meta charset="UTF-8">
+<title>MC_HTML Launcher Pro</title>
+<style>
+/* --- Mantener tu CSS completo --- */
+body { margin: 0; background: #1e1e1e; color: white; font-family: 'Segoe UI', sans-serif; display: flex; height: 100vh; overflow: hidden; }
+/* Barra lateral, botones, pestañas, iframe, etc... */
+#sidebar { width: 220px; background: #252526; border-right: 2px solid #333; display: flex; flex-direction: column; justify-content: space-between; z-index: 10; }
+.nav-group { display: flex; flex-direction: column; }
+.side-btn { padding: 15px; cursor: pointer; border-bottom: 1px solid #333; text-align: left; padding-left: 25px; transition: 0.2s; color: #ccc; }
+.side-btn:hover, .side-btn.active { background: #333; color: #448032; border-left: 4px solid #448032; }
+#content-area { flex-grow: 1; position: relative; overflow: hidden; background: #1e1e1e; }
+.tab-content { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; animation: fadeIn 0.3s; }
+.tab-content.active { display: flex; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+#tab-jugar { background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://www.transparenttextures.com/patterns/carbon-fibre.png'); }
+h1 { font-size: 3.5rem; margin-bottom: 5px; }
+.skin-container { display: flex; gap: 30px; align-items: center; background: #2d2d2d; padding: 30px; border-radius: 8px; border: 1px solid #444; }
+.skin-preview { width: 150px; height: 250px; background: #111; border: 2px solid #448032; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+#current-skin-img { max-width: 100%; max-height: 100%; image-rendering: pixelated; }
+.play-section { background: #3c3c3c; width: 100%; padding: 20px; position: absolute; bottom: 0; display: flex; justify-content: center; align-items: center; gap: 20px; box-shadow: 0 -5px 15px rgba(0,0,0,0.5); }
+.play-btn { background: #448032; color: white; border: none; padding: 15px 80px; font-size: 22px; cursor: pointer; font-weight: bold; box-shadow: inset 0 -4px 0 rgba(0,0,0,0.3); }
+.play-btn:hover { background: #529b3d; transform: scale(1.02); }
+select, input { padding: 12px; background: #252526; color: white; border: 1px solid #555; border-radius: 4px; }
+iframe { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; border: none; z-index: 100; background: #000; }
+.license-link { padding: 15px; font-size: 11px; color: #666; text-decoration: none; text-align: center; border-top: 1px solid #333; }
+</style>
 </head>
 <body>
 
-    <div id="sidebar">
-        <div class="nav-group">
-            <div class="side-btn active" onclick="switchTab('tab-jugar', this)">JUGAR</div>
-            <div class="side-btn" onclick="switchTab('tab-instala', this)">INSTALACIONES</div>
-            <div class="side-btn" onclick="switchTab('tab-skins', this)">SKINS</div>
-        </div>
-        <a href="./LICENSE" target="_blank" class="license-link">📜 Licencia MIT - Código Abierto</a>
-    </div>
+<div id="sidebar">
+  <div class="nav-group">
+      <div class="side-btn active" onclick="switchTab('tab-jugar', this)">JUGAR</div>
+      <div class="side-btn" onclick="switchTab('tab-instala', this)">INSTALACIONES</div>
+      <div class="side-btn" onclick="switchTab('tab-skins', this)">SKINS</div>
+  </div>
+  <a href="./LICENSE" target="_blank" class="license-link">📜 Licencia MIT - Código Abierto</a>
+</div>
 
-    <div id="content-area">
-        
-        <div id="tab-jugar" class="tab-content active">
-            <h1>MC_HTML <span style="color: #448032;">ALPHA</span></h1>
-            <p id="player-tag" style="background: #448032; padding: 5px 15px; border-radius: 20px;">Jugador: Steve</p>
-            <div class="play-section">
-                <select id="version-select"></select>
-                <button class="play-btn" onclick="iniciarJuego()">¡JUGAR!</button>
-            </div>
-        </div>
+<div id="content-area">
+  <div id="tab-jugar" class="tab-content active">
+      <h1>MC_HTML <span style="color: #448032;">ALPHA</span></h1>
+      <p id="player-tag" style="background: #448032; padding: 5px 15px; border-radius: 20px;">Jugador: Steve</p>
+      <div class="play-section">
+          <select id="version-select">
+              <option>Cargando versiones...</option>
+          </select>
+          <button class="play-btn" onclick="iniciarJuego()">¡JUGAR!</button>
+      </div>
+  </div>
 
-        <div id="tab-instala" class="tab-content">
-            <h2>Instalaciones</h2>
-            <div style="width: 80%; background: #252526; padding: 20px; border: 1px solid #333;">
-                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #444; padding-bottom: 10px;">
-                    <span>📁 Instalaciones detectadas automáticamente</span>
-                    <span style="color: #448032;">Dinámico</span>
-                </div>
-                <p style="font-size: 13px; color: #888;">Basado en versions.json</p>
-            </div>
-        </div>
+  <div id="tab-instala" class="tab-content">
+      <h2>Instalaciones</h2>
+      <div style="width: 80%; background: #252526; padding: 20px; border: 1px solid #333;">
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #444; padding-bottom: 10px;">
+              <span>📁 MC_HTML_0.0.1ALPA</span>
+              <span style="color: #448032;">Versión Estable</span>
+          </div>
+          <p style="font-size: 13px; color: #888;">Ubicación: /root/MC_HTML_0.0.1ALPA/</p>
+      </div>
+  </div>
 
-        <div id="tab-skins" class="tab-content">
-            <h2>Biblioteca de Skins</h2>
-            <div class="skin-container">
-                <div class="skin-preview">
-                    <img id="current-skin-img" src="https://minecraft.net/static/theme/img/characters/steve.png" alt="Preview">
-                </div>
-                <div style="display: flex; flex-direction: column; gap: 15px;">
-                    <label>Nombre de Usuario:</label>
-                    <input type="text" id="username-input" placeholder="Steve" oninput="updateName(this.value)">
-                    <label>URL de Skin (PNG):</label>
-                    <input type="text" id="skin-url" placeholder="http://..." onchange="updateSkin(this.value)">
-                    <button class="play-btn" style="padding: 10px; font-size: 14px;" onclick="saveSettings()">Guardar Cambios</button>
-                </div>
-            </div>
-        </div>
+  <div id="tab-skins" class="tab-content">
+      <h2>Biblioteca de Skins</h2>
+      <div class="skin-container">
+          <div class="skin-preview" id="skin-preview-box">
+              <img id="current-skin-img" src="https://minecraft.net/static/theme/img/characters/steve.png" alt="Preview">
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 15px;">
+              <label>Nombre de Usuario:</label>
+              <input type="text" id="username-input" placeholder="Steve" oninput="updateName(this.value)">
+              <label>URL de Skin (PNG):</label>
+              <input type="text" id="skin-url" placeholder="http://..." onchange="updateSkin(this.value)">
+              <button class="play-btn" style="padding: 10px; font-size: 14px;" onclick="saveSettings()">Guardar Cambios</button>
+          </div>
+      </div>
+  </div>
+</div>
 
-    </div>
-
-    <iframe id="game-frame"></iframe>
+<iframe id="game-frame"></iframe>
 
 <script>
 function switchTab(tabId, btn) {
@@ -118,14 +111,32 @@ function iniciarJuego() {
     const frame = document.getElementById('game-frame');
     frame.src = `./${carpeta}/index.html`;
     frame.style.display = 'block';
-
-    if (frame.requestFullscreen) frame.requestFullscreen();
+    if(frame.requestFullscreen) frame.requestFullscreen();
+    else if(frame.webkitRequestFullscreen) frame.webkitRequestFullscreen();
 }
 
+// Cargar versiones automáticamente desde versions.json
+fetch('./versions.json')
+.then(res => res.json())
+.then(data => {
+    const select = document.getElementById('version-select');
+    select.innerHTML = '';
+    data.versions.forEach(v => {
+        const opt = document.createElement('option');
+        opt.value = v;
+        opt.text = v;
+        select.appendChild(opt);
+    });
+})
+.catch(err => {
+    console.error("No se pudo cargar versions.json", err);
+    document.getElementById('version-select').innerHTML = '<option>Error al cargar versiones</option>';
+});
+
 document.addEventListener('keydown', (e) => {
-    if (e.key === "Escape") {
+    if(e.key === "Escape") {
         const frame = document.getElementById('game-frame');
-        if (frame.style.display === 'block') {
+        if(frame.style.display === 'block') {
             if(confirm("¿Salir al Launcher?")) {
                 frame.style.display = 'none';
                 frame.src = '';
@@ -135,39 +146,7 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-window.onload = async () => {
-
-    try {
-        const response = await fetch('./versions.json');
-        const data = await response.json();
-        const select = document.getElementById('version-select');
-        select.innerHTML = '';
-
-        const sorted = data.versions.sort((a, b) => {
-            const getNums = v => v.match(/\d+/g)?.map(Number) || [0];
-            const aN = getNums(a);
-            const bN = getNums(b);
-
-            for (let i = 0; i < Math.max(aN.length, bN.length); i++) {
-                const diff = (bN[i] || 0) - (aN[i] || 0);
-                if (diff !== 0) return diff;
-            }
-            return 0;
-        });
-
-        sorted.forEach((version, index) => {
-            const option = document.createElement('option');
-            option.value = version;
-            option.textContent = index === 0
-                ? version.replace('MC_HTML_', '') + " (Última)"
-                : version.replace('MC_HTML_', '');
-            select.appendChild(option);
-        });
-
-    } catch (err) {
-        console.error("Error cargando versions.json", err);
-    }
-
+window.onload = () => {
     const saved = localStorage.getItem('MC_HTML_SETTINGS');
     if(saved) {
         const data = JSON.parse(saved);
@@ -180,6 +159,5 @@ window.onload = async () => {
     }
 };
 </script>
-
 </body>
 </html>
