@@ -13,7 +13,6 @@
         .btn:hover { background: #666; border-color: #fff; }
         #crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 24px; display: none; pointer-events: none; z-index: 5; }
         
-        /* Sistema de Corazones */
         #ui-hearts { 
             position: fixed; 
             bottom: 30px; 
@@ -21,11 +20,11 @@
             transform: translateX(-110%); 
             display: flex; 
             gap: 4px; 
-            z-index: 10; 
+            z-index: 100; 
             pointer-events: none;
         }
         .heart { width: 18px; height: 18px; background: #ff0000; border: 2px solid #000; }
-        .heart.empty { background: #333; opacity: 0.5; }
+        .heart.empty { background: #333 !important; opacity: 0.3; }
 
         .settings-panel { background: #222; padding: 20px; border: 2px solid #555; width: 350px; margin-top: 10px; }
         .setting-item { display: flex; flex-direction: column; margin-bottom: 15px; }
@@ -40,23 +39,7 @@
 <body>
 
     <div id="crosshair">+</div>
-    <div id="ui-hearts" style="position: fixed; bottom: 30px; left: 50%; transform: translateX(-120%); display: flex; gap: 5px; z-index: 100;"></div>
-
-<div id="death-screen" class="screen">
-    <h1 style="color: #ff0000; font-size: 50px;">HAS MUERTO</h1>
-    <div class="btn-group">
-        <button class="btn" onclick="location.reload()">Reaparecer</button>
-        <button class="btn" onclick="window.showScreen('main-menu')">Menú Principal</button>
-    </div>
-</div>
-
-    
     <div id="ui-hearts"></div>
-
-    <div id="loading-screen" class="screen">
-        <h2 id="load-text">CARGANDO MUNDO...</h2>
-        <div class="loader-bar"><div id="progress"></div></div>
-    </div>
 
     <div id="death-screen" class="screen">
         <h1 style="color: #ff0000; font-size: 48px; letter-spacing: 10px;">HAS MUERTO</h1>
@@ -64,6 +47,11 @@
             <button class="btn" onclick="location.reload()">Reaparecer</button>
             <button class="btn" onclick="showScreen('main-menu')">Menú Principal</button>
         </div>
+    </div>
+
+    <div id="loading-screen" class="screen">
+        <h2 id="load-text">CARGANDO MUNDO...</h2>
+        <div class="loader-bar"><div id="progress"></div></div>
     </div>
 
     <div id="main-menu" class="screen active">
@@ -122,4 +110,3 @@
     <script type="module" src="game.js"></script>
 </body>
 </html>
-
