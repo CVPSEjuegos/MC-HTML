@@ -1,16 +1,19 @@
-// game.js
 import * as THREE from "three";
 import { Player } from "./Player.js";
+import { World } from "./World.js";
+import { Multiplayer } from "./Multiplayer.js";
 
-let scene, camera, renderer, playerInstance;
+let scene, camera, renderer, player, world, multiplayer;
 let clock = new THREE.Clock();
 let keys = {};
 
-window.startGame = function(worldName) {
-    init();
+// Esta función se llama desde el index.html
+window.startGame = function(worldName, isHost = false, joinId = null) {
+    init(isHost, joinId);
 };
 
-function init() {
+function init(isHost, joinId) {
+    // 1. Configuración de Escena
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x87ceeb); // Cielo azul
 
@@ -18,52 +21,81 @@ function init() {
     
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
     document.body.appendChild(renderer.domElement);
 
-    // Luces
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+    // 2. Luces
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
     scene.add(ambientLight);
-    const sunLight = new THREE.DirectionalLight(0xffffff, 0.5);
-    sunLight.position.set(10, 20, 10);
+    const sunLight = new THREE.DirectionalLight(0xffffff, 0.6);
+    sunLight.position.set(50, 100, 50);
     scene.add(sunLight);
 
-    // CREAR AL JUGADOR (Primera Persona)
-    playerInstance = new Player(scene, camera);
+    // 3. Inicializar el Mundo (Zonas, Altura -64 y Árboles)
+    world = new World(scene);
 
-    generateTerrain();
+    // 4. Inicializar al Jugador (Pasándole el mundo para las colisiones/carga)
+    player = new Player(scene, camera, world);
+
+    // 5. Inicializar el Sistema Multijugador
+    multiplayer = new Multiplayer(camera, scene);
+
+    if (isHost) {
+        multiplayer.host(); // Crea el ID para que otros se unan
+    } else if (joinId) {
+        multiplayer.join(joinId); // Se une al ID del amigo
+    }
+
+    // 6. Generación Inicial
+    world.update(player.controls.getObject().position);
+
     animate();
 }
 
-function generateTerrain() {
-    // Generar un suelo de cubos de 32x32 para que parezca Minecraft
-    const geometry = new THREE.BoxGeometry(1, 1, 1);
-    const material = new THREE.MeshStandardMaterial({ color: 0x4d7a32 }); // Color pasto
-
-    for (let x = -16; x < 16; x++) {
-        for (let z = -16; z < 16; z++) {
-            const block = new THREE.Mesh(geometry, material);
-            block.position.set(x, 0, z);
-            scene.add(block);
-        }
-    }
-}
-
-// Controles de teclado
+// Controles de teclado actualizados
 window.addEventListener("keydown", (e) => {
     keys[e.key.toLowerCase()] = true;
-    if (e.code === "Space") playerInstance.jump();
+    
+    // El salto se maneja aquí o dentro de Player.js
+    if (e.code === "Space") {
+        if (player) player.jump();
+    }
 });
+
 window.addEventListener("keyup", (e) => {
     keys[e.key.toLowerCase()] = false;
 });
+
+// Función de Pausa para el index.html
+window.setPause = function(state) {
+    if (!player) return;
+    if (state) {
+        player.controls.unlock();
+    } else {
+        player.controls.lock();
+    }
+};
 
 function animate() {
     requestAnimationFrame(animate);
     const delta = clock.getDelta();
 
-    if (playerInstance) {
-        playerInstance.update(keys, delta);
+    // Si el jugador existe y el puntero está bloqueado, actualizamos
+    if (player && player.controls.isLocked) {
+        player.update(keys, delta);
+        
+        // Sincronizar posición en multijugador
+        if (multiplayer) {
+            multiplayer.update();
+        }
     }
 
     renderer.render(scene, camera);
 }
+
+// Ajuste de ventana
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
