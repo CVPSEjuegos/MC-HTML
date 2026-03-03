@@ -28,7 +28,6 @@
 
         .settings-panel { background: #222; padding: 20px; border: 2px solid #555; width: 350px; margin-top: 10px; }
         .setting-item { display: flex; flex-direction: column; margin-bottom: 15px; }
-        .setting-item label { font-size: 12px; margin-bottom: 5px; color: #aaa; }
         input[type=range] { cursor: pointer; accent-color: #448032; }
         
         #loading-screen { background: #000; z-index: 100; }
@@ -41,17 +40,17 @@
     <div id="crosshair">+</div>
     <div id="ui-hearts"></div>
 
+    <div id="loading-screen" class="screen">
+        <h2 id="load-text">CARGANDO MUNDO...</h2>
+        <div class="loader-bar"><div id="progress"></div></div>
+    </div>
+
     <div id="death-screen" class="screen">
         <h1 style="color: #ff0000; font-size: 48px; letter-spacing: 10px;">HAS MUERTO</h1>
         <div class="btn-group">
             <button class="btn" onclick="location.reload()">Reaparecer</button>
-            <button class="btn" onclick="showScreen('main-menu')">Menú Principal</button>
+            <button class="btn" onclick="window.showScreen('main-menu')">Menú Principal</button>
         </div>
-    </div>
-
-    <div id="loading-screen" class="screen">
-        <h2 id="load-text">CARGANDO MUNDO...</h2>
-        <div class="loader-bar"><div id="progress"></div></div>
     </div>
 
     <div id="main-menu" class="screen active">
@@ -76,10 +75,6 @@
             <div class="setting-item">
                 <label>FOV: <span id="val-fov">60</span></label>
                 <input type="range" id="slider-fov" min="60" max="120" value="60">
-            </div>
-            <div class="setting-item">
-                <label>FPS MAX: <span id="val-fps">120</span></label>
-                <input type="range" id="slider-fps" min="30" max="300" value="120">
             </div>
             <div class="setting-item">
                 <label>NIEBLA: <span id="val-fog">10</span></label>
