@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <title>HTML-CRAFT ALPHA GOLD</title>
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         body { margin: 0; overflow: hidden; background: #000; font-family: 'Segoe UI', sans-serif; color: white; user-select: none; }
         canvas { display: block; }
@@ -13,9 +12,21 @@
         .btn { padding: 12px; background: #444; color: white; border: 2px solid #000; cursor: pointer; font-weight: bold; font-size: 16px; text-transform: uppercase; }
         .btn:hover { background: #666; border-color: #fff; }
         #crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 24px; display: none; pointer-events: none; z-index: 5; }
-        #network-status { position: fixed; top: 10px; right: 10px; font-size: 12px; z-index: 100; }
         
-        /* Estilos para los Sliders de Opciones */
+        /* Sistema de Corazones */
+        #ui-hearts { 
+            position: fixed; 
+            bottom: 30px; 
+            left: 50%; 
+            transform: translateX(-110%); 
+            display: flex; 
+            gap: 4px; 
+            z-index: 10; 
+            pointer-events: none;
+        }
+        .heart { width: 18px; height: 18px; background: #ff0000; border: 2px solid #000; }
+        .heart.empty { background: #333; opacity: 0.5; }
+
         .settings-panel { background: #222; padding: 20px; border: 2px solid #555; width: 350px; margin-top: 10px; }
         .setting-item { display: flex; flex-direction: column; margin-bottom: 15px; }
         .setting-item label { font-size: 12px; margin-bottom: 5px; color: #aaa; }
@@ -28,19 +39,28 @@
 </head>
 <body>
 
-    <div id="network-status">🟢 Online</div>
     <div id="crosshair">+</div>
+    
+    <div id="ui-hearts"></div>
 
     <div id="loading-screen" class="screen">
         <h2 id="load-text">CARGANDO MUNDO...</h2>
         <div class="loader-bar"><div id="progress"></div></div>
     </div>
 
+    <div id="death-screen" class="screen">
+        <h1 style="color: #ff0000; font-size: 48px; letter-spacing: 10px;">HAS MUERTO</h1>
+        <div class="btn-group">
+            <button class="btn" onclick="location.reload()">Reaparecer</button>
+            <button class="btn" onclick="showScreen('main-menu')">Menú Principal</button>
+        </div>
+    </div>
+
     <div id="main-menu" class="screen active">
         <h1 style="letter-spacing: 5px; color: #448032;">HTML-CRAFT</h1>
         <div class="btn-group">
             <button class="btn" onclick="showScreen('singleplayer')">Un Jugador</button>
-            <button class="btn" onclick="showScreen('multiplayer')">Multijugador</button>
+            <button class="btn">Multijugador</button>
         </div>
     </div>
 
@@ -49,18 +69,6 @@
         <div class="btn-group">
             <button class="btn" id="btn-play-alpha">Cargar Mundo Alpha</button>
             <button class="btn" onclick="showScreen('main-menu')">Volver</button>
-        </div>
-    </div>
-
-    <div id="multiplayer" class="screen">
-        <h2>MULTIJUGADOR</h2>
-        <div id="server-list" style="width: 450px; background: #222; border: 2px solid #555; margin-bottom: 15px; padding: 10px;">
-            <div style="padding: 10px; background: #333; cursor: pointer;">🌐 SERVIDOR OFICIAL (Alpha Test 2026)</div>
-        </div>
-        <div class="btn-group" style="flex-direction: row; width: 500px;">
-            <button class="btn" style="flex:1" id="btn-host">Host</button>
-            <button class="btn" style="flex:1" id="btn-join">Unirse</button>
-            <button class="btn" style="flex:1" onclick="showScreen('main-menu')">Volver</button>
         </div>
     </div>
 
@@ -76,8 +84,8 @@
                 <input type="range" id="slider-fps" min="30" max="300" value="120">
             </div>
             <div class="setting-item">
-                <label>NIEBLA (Distancia): <span id="val-fog">10</span></label>
-                <input type="range" id="slider-fog" min="10" max="60" value="10">
+                <label>NIEBLA: <span id="val-fog">10</span></label>
+                <input type="range" id="slider-fog" min="1" max="50" value="10">
             </div>
         </div>
         <div class="btn-group" style="margin-top: 20px;">
@@ -96,15 +104,9 @@
     </script>
     <script>
         window.showScreen = function(id) {
-            document.querySelectorAll('.screen').forEach(s => {
-                s.classList.remove('active');
-                s.style.display = 'none';
-            });
+            document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
             const target = document.getElementById(id);
-            if (target) {
-                target.classList.add('active');
-                target.style.display = 'flex';
-            }
+            if (target) target.style.display = 'flex';
         };
     </script>
     <script type="module" src="game.js"></script>
