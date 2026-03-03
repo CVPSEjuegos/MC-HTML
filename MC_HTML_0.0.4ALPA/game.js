@@ -1,129 +1,137 @@
-import * as THREE from 'three';
-import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
-import { World } from './world.js';
-import { Multiplayer } from './multiplayer.js';
-import { SaveSystem } from './save_system.js';
+// game.js
+import * as THREE from "three";
 
-let scene, camera, renderer, controls;
-let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
-let canJump = false;
+let scene, camera, renderer, player;
+let world = [];
+let multiplayer = {
+    peer: null,
+    connections: {},
+    id: null,
+};
 
-let prevTime = performance.now();
-const velocity = new THREE.Vector3();
-const direction = new THREE.Vector3();
+// ==================== INIT SINGLEPLAYER ====================
+window.initSinglePlayer = function() {
+    console.log("Inicializando mundo local...");
 
-let world, multiplayer, saveSystem;
-
-function init() {
-
+    // Escena
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x87CEEB);
+    scene.background = new THREE.Color(0x87ceeb);
 
-    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    // Cámara
+    camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 2, 5);
 
-    renderer = new THREE.WebGLRenderer({ antialias: true });
+    // Render
+    renderer = new THREE.WebGLRenderer({antialias: true});
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.shadowMap.enabled = true;
-
     document.body.appendChild(renderer.domElement);
 
+    // Luz
     const light = new THREE.DirectionalLight(0xffffff, 1);
-    light.position.set(20, 40, 20);
-    light.castShadow = true;
+    light.position.set(10, 10, 10);
     scene.add(light);
-    scene.add(new THREE.AmbientLight(0x404040));
 
-    controls = new PointerLockControls(camera, document.body);
+    // Jugador
+    const geometry = new THREE.BoxGeometry(1, 2, 1);
+    const material = new THREE.MeshStandardMaterial({color: 0x448032});
+    player = new THREE.Mesh(geometry, material);
+    player.position.y = 1;
+    scene.add(player);
 
-    world = new World(scene);
-    multiplayer = new Multiplayer(camera, scene);
-    saveSystem = new SaveSystem();
-
-    camera.position.y = 10;
-
-    document.addEventListener('click', () => controls.lock());
+    // Mundo simple
+    createWorld();
 
     animate();
+};
+
+// ==================== CREATE WORLD ====================
+function createWorld() {
+    // Crea un piso simple 10x10
+    const floorMat = new THREE.MeshStandardMaterial({color: 0x555555});
+    for(let x=-5;x<5;x++){
+        for(let z=-5;z<5;z++){
+            const block = new THREE.Mesh(new THREE.BoxGeometry(1,1,1), floorMat);
+            block.position.set(x, -0.5, z);
+            scene.add(block);
+            world.push(block);
+        }
+    }
 }
 
-function startWorld(seed) {
-    world.setSeed(seed);
-    world.generateInitialTerrain();
-}
-
+// ==================== ANIMATE ====================
 function animate() {
     requestAnimationFrame(animate);
 
-    const time = performance.now();
-    const delta = (time - prevTime) / 1000;
-
-    if (controls.isLocked === true) {
-
-        velocity.x -= velocity.x * 10.0 * delta;
-        velocity.z -= velocity.z * 10.0 * delta;
-        velocity.y -= 9.8 * 20.0 * delta; // gravedad
-
-        direction.z = Number(moveForward) - Number(moveBackward);
-        direction.x = Number(moveRight) - Number(moveLeft);
-        direction.normalize();
-
-        if (moveForward || moveBackward) velocity.z -= direction.z * 400.0 * delta;
-        if (moveLeft || moveRight) velocity.x -= direction.x * 400.0 * delta;
-
-        controls.moveRight(-velocity.x * delta);
-        controls.moveForward(-velocity.z * delta);
-
-        camera.position.y += velocity.y * delta;
-
-        if (camera.position.y < 5) {
-            velocity.y = 0;
-            camera.position.y = 5;
-            canJump = true;
-        }
-
-        world.updateChunks(camera.position);
-        multiplayer.update();
-    }
+    // Placeholder: movimiento simple con WASD
+    handleMovement();
 
     renderer.render(scene, camera);
-    prevTime = time;
 }
 
-document.addEventListener('keydown', (event) => {
+// ==================== MOVEMENT ====================
+const keys = {};
+window.addEventListener("keydown", e=>keys[e.key.toLowerCase()]=true);
+window.addEventListener("keyup", e=>keys[e.key.toLowerCase()]=false);
 
-    switch (event.code) {
-        case 'KeyW': moveForward = true; break;
-        case 'KeyS': moveBackward = true; break;
-        case 'KeyA': moveLeft = true; break;
-        case 'KeyD': moveRight = true; break;
-        case 'Space':
-            if (canJump === true) velocity.y += 15;
-            canJump = false;
-            break;
-    }
+function handleMovement() {
+    const speed = 0.1;
+    if(keys["w"]) player.position.z -= speed;
+    if(keys["s"]) player.position.z += speed;
+    if(keys["a"]) player.position.x -= speed;
+    if(keys["d"]) player.position.x += speed;
 
-});
+    // Mantener la cámara detrás del jugador
+    camera.position.x = player.position.x;
+    camera.position.z = player.position.z + 5;
+    camera.lookAt(player.position);
+}
 
-document.addEventListener('keyup', (event) => {
+// ==================== MULTIPLAYER ====================
+window.hostServer = function() {
+    multiplayer.peer = new Peer(undefined, {host: 'peerjs.com', port: 443, secure:true});
+    multiplayer.peer.on('open', id => {
+        multiplayer.id = id;
+        alert(`Servidor creado! ID: ${id}`);
+    });
 
-    switch (event.code) {
-        case 'KeyW': moveForward = false; break;
-        case 'KeyS': moveBackward = false; break;
-        case 'KeyA': moveLeft = false; break;
-        case 'KeyD': moveRight = false; break;
-    }
-
-});
-
-window.startPlaying = (seed) => {
-    if (!scene) init();
-    startWorld(seed || Date.now());
+    multiplayer.peer.on('connection', conn => {
+        multiplayer.connections[conn.peer] = conn;
+        conn.on('data', data => handleMultiplayerData(conn.peer, data));
+        conn.on('close', ()=> delete multiplayer.connections[conn.peer]);
+    });
 };
 
-window.addEventListener('resize', () => {
-    if (!camera) return;
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-});
+window.joinServer = function(id) {
+    if(!multiplayer.peer) multiplayer.peer = new Peer({host: 'peerjs.com', port: 443, secure:true});
+
+    const conn = multiplayer.peer.connect(id);
+    conn.on('open', ()=>{
+        multiplayer.connections[id] = conn;
+        alert("Conectado al servidor!");
+    });
+    conn.on('data', data => handleMultiplayerData(id, data));
+};
+
+// ==================== HANDLE MULTIPLAYER DATA ====================
+function handleMultiplayerData(peerId, data) {
+    console.log(`Recibido de ${peerId}:`, data);
+    // Aquí puedes procesar movimiento de otros jugadores, chat, etc.
+}
+
+// ==================== UTILIDADES ====================
+window.saveWorld = function() {
+    // Guardar posición del jugador y mundo simple
+    const state = {
+        player: {x: player.position.x, y: player.position.y, z: player.position.z}
+    };
+    localStorage.setItem('MC_HTML_WORLD', JSON.stringify(state));
+    alert("Mundo guardado!");
+};
+
+window.loadWorld = function() {
+    const state = JSON.parse(localStorage.getItem('MC_HTML_WORLD'));
+    if(state) {
+        player.position.set(state.player.x, state.player.y, state.player.z);
+        alert("Mundo cargado!");
+    }
+};
