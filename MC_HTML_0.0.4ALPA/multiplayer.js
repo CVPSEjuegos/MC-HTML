@@ -1,28 +1,59 @@
+import * as THREE from 'three';
+
 export class Multiplayer {
-    constructor(game) {
-        this.game = game;
+
+    constructor(camera, scene) {
+        this.camera = camera;
+        this.scene = scene;
         this.peer = null;
         this.connections = [];
+        this.players = {};
     }
 
-    // Lógica para el Servidor Oficial de Pruebas
-    connectToOfficialTestServer() {
-        console.log("Conectando al servidor oficial...");
-        const officialSeed = "test1_02/03/2026";
-        this.game.world.setSeed(officialSeed);
-        this.game.startWorld(); // Inicia el mundo con la semilla especial
+    host() {
+        this.peer = new Peer();
+        this.peer.on('connection', conn => this.setupConnection(conn));
     }
 
-    abrirServidor() {
-        this.peer = new Peer(); // Genera un ID aleatorio para invitar amigos
-        this.peer.on('open', (id) => {
-            alert("Servidor abierto. Tu ID es: " + id);
-            this.game.world.setSeed(Date.now()); // Semilla aleatoria por tiempo
+    join(id) {
+        this.peer = new Peer();
+        this.peer.on('open', () => {
+            const conn = this.peer.connect(id);
+            this.setupConnection(conn);
+        });
+    }
+
+    setupConnection(conn) {
+
+        this.connections.push(conn);
+
+        conn.on('data', data => {
+
+            if (!this.players[conn.peer]) {
+                const mesh = new THREE.Mesh(
+                    new THREE.BoxGeometry(0.8,1.8,0.8),
+                    new THREE.MeshStandardMaterial({color:0xff0000})
+                );
+                this.scene.add(mesh);
+                this.players[conn.peer] = mesh;
+            }
+
+            this.players[conn.peer].position.set(data.x, data.y - 1, data.z);
         });
 
-        this.peer.on('connection', (conn) => {
-            console.log("Jugador conectado!");
-            this.connections.push(conn);
+    }
+
+    update() {
+
+        const data = {
+            x: this.camera.position.x,
+            y: this.camera.position.y,
+            z: this.camera.position.z
+        };
+
+        this.connections.forEach(conn => {
+            if (conn.open) conn.send(data);
         });
+
     }
 }
