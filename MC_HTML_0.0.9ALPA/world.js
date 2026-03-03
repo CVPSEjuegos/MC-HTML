@@ -3,39 +3,36 @@ import * as THREE from 'three';
 export class World {
     constructor(scene) {
         this.scene = scene;
-        this.seed = 0;
+        this.blocks = [];
+        this.generate();
     }
 
-    setSeed(input) {
-        if (isNaN(input)) {
-            let hash = 0;
-            let str = String(input);
-            for (let i = 0; i < str.length; i++) {
-                hash = ((hash << 5) - hash) + str.charCodeAt(i);
-                hash |= 0;
-            }
-            this.seed = Math.abs(hash);
-        } else {
-            this.seed = Number(input);
-        }
-        console.log("🌱 Semilla aplicada:", this.seed);
-    }
-
-    async generateInitialTerrain() {
+    generate() {
         const geometry = new THREE.BoxGeometry(1, 1, 1);
-        const material = new THREE.MeshLambertMaterial({ color: 0x55aa55 });
-        const mesh = new THREE.InstancedMesh(geometry, material, 2500); 
-        const matrix = new THREE.Matrix4();
-        
-        let i = 0;
-        for (let x = 0; x < 50; x++) {
-            for (let z = 0; z < 50; z++) {
-                // El algoritmo de ruido usa la semilla para que el mapa oficial sea igual para todos
-                const y = Math.floor(Math.sin((x + this.seed) * 0.1) * 2 + Math.cos((z + this.seed) * 0.1) * 2);
-                matrix.setPosition(x, y, z);
-                mesh.setMatrixAt(i++, matrix);
+        const material = new THREE.MeshStandardMaterial({ color: 0x55aa55 });
+
+        for (let x = 0; x < 16; x++) {
+            for (let z = 0; z < 16; z++) {
+                const mesh = new THREE.Mesh(geometry, material);
+                mesh.position.set(x, 0, z);
+                this.scene.add(mesh);
+                this.blocks.push(mesh);
             }
         }
-        this.scene.add(mesh);
+    }
+
+    breakBlock(camera) {
+        const raycaster = new THREE.Raycaster();
+        raycaster.setFromCamera({x: 0, y: 0}, camera);
+        const intersects = raycaster.intersectObjects(this.blocks);
+        if (intersects.length > 0) {
+            const obj = intersects[0].object;
+            this.scene.remove(obj);
+            this.blocks = this.blocks.filter(b => b !== obj);
+        }
+    }
+    
+    placeBlock(camera) {
+        // Lógica para poner bloque en la cara del seleccionado
     }
 }
