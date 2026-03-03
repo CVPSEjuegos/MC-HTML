@@ -4,20 +4,28 @@
     <meta charset="UTF-8">
     <title>Minecraft HTML5 - 0.0.9 ALPHA</title>
     <style>
-        body { margin: 0; overflow: hidden; background-color: #87ceeb; font-family: sans-serif; }
+        body { margin: 0; overflow: hidden; background-color: #87ceeb; font-family: 'Courier New', Courier, monospace; }
         #crosshair {
-            position: fixed; top: 50%; left: 50%;
-            width: 20px; height: 20px;
-            border: 2px solid white;
-            transform: translate(-50%, -50%);
-            pointer-events: none; z-index: 10;
+            position: fixed; top: 50%; left: 50%; width: 16px; height: 16px;
+            border: 2px solid white; transform: translate(-50%, -50%);
+            pointer-events: none; z-index: 10; display: none;
         }
+        /* Menús */
+        .overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 20;
+        }
+        .btn {
+            padding: 15px 30px; margin: 10px; background: #448032; color: white;
+            border: 2px solid #222; cursor: pointer; min-width: 200px; font-size: 18px;
+        }
+        .btn:hover { background: #55aa44; }
+        
         #hotbar {
-            position: fixed; bottom: 20px; left: 50%;
-            transform: translateX(-50%);
-            display: flex; gap: 10px;
-            background: rgba(0,0,0,0.6); padding: 10px;
-            border-radius: 5px; border: 2px solid #333;
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 10px; background: rgba(0,0,0,0.6); padding: 10px;
+            border-radius: 5px; border: 2px solid #333; z-index: 15;
         }
         .slot { width: 40px; height: 40px; border: 2px solid #555; }
         .selected { border-color: white !important; box-shadow: 0 0 10px white; }
@@ -25,12 +33,27 @@
 </head>
 <body>
     <div id="crosshair"></div>
+
+    <div id="main-menu" class="overlay">
+        <h1 style="color: white; text-shadow: 2px 2px #000;">MINECRAFT HTML5</h1>
+        <button class="btn" id="btn-play-alpha">SOLITARIO (ALPHA)</button>
+        <button class="btn" id="btn-host">CREAR SERVIDOR</button>
+        <button class="btn" id="btn-join">UNIRSE A SERVIDOR</button>
+    </div>
+
+    <div id="esc-menu" class="overlay" style="display: none;">
+        <h2 style="color: white;">PAUSA</h2>
+        <button class="btn" id="btn-resume">VOLVER AL JUEGO</button>
+        <button class="btn" onclick="location.reload()">SALIR</button>
+    </div>
+
     <div id="hotbar">
         <div id="slot1" class="slot selected" style="background: #55aa55;"></div>
         <div id="slot2" class="slot" style="background: #808080;"></div>
         <div id="slot3" class="slot" style="background: #8b4513;"></div>
     </div>
 
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <script type="importmap">
         { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
     </script>
