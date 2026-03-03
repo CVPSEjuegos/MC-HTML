@@ -2,72 +2,110 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>MC-HTML 0.0.9 ALPHA Gold FINAL</title>
+    <title>HTML-CRAFT ALPHA GOLD</title>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
-        body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Courier New', Courier, monospace; user-select: none; }
-        #crosshair {
-            position: fixed; top: 50%; left: 50%; width: 18px; height: 18px;
-            border: 2px solid rgba(255,255,255,0.8); transform: translate(-50%, -50%);
-            pointer-events: none; z-index: 10; display: none;
-        }
-        .overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); display: flex; flex-direction: column;
-            justify-content: center; align-items: center; z-index: 100;
-        }
-        #loading-screen { display: none; color: white; }
-        .loader-bar { width: 300px; height: 15px; background: #222; border: 3px solid #000; margin-top: 15px; }
+        body { margin: 0; overflow: hidden; background: #000; font-family: 'Segoe UI', sans-serif; color: white; user-select: none; }
+        canvas { display: block; }
+        .screen { position: absolute; width: 100%; height: 100%; display: none; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.85); z-index: 20; }
+        .active { display: flex !important; }
+        .btn-group { display: flex; flex-direction: column; gap: 10px; width: 350px; }
+        .btn { padding: 12px; background: #444; color: white; border: 2px solid #000; cursor: pointer; font-weight: bold; font-size: 16px; text-transform: uppercase; }
+        .btn:hover { background: #666; border-color: #fff; }
+        #crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 24px; display: none; pointer-events: none; z-index: 5; }
+        #network-status { position: fixed; top: 10px; right: 10px; font-size: 12px; z-index: 100; }
+        
+        /* Estilos para los Sliders de Opciones */
+        .settings-panel { background: #222; padding: 20px; border: 2px solid #555; width: 350px; margin-top: 10px; }
+        .setting-item { display: flex; flex-direction: column; margin-bottom: 15px; }
+        .setting-item label { font-size: 12px; margin-bottom: 5px; color: #aaa; }
+        input[type=range] { cursor: pointer; accent-color: #448032; }
+        
+        #loading-screen { background: #000; z-index: 100; }
+        .loader-bar { width: 300px; height: 10px; background: #222; border: 1px solid #fff; margin-top: 10px; }
         #progress { width: 0%; height: 100%; background: #448032; }
-        .btn {
-            padding: 15px 30px; margin: 10px; background: #444; color: white;
-            border: 4px solid #000; cursor: pointer; min-width: 250px; font-size: 18px;
-            text-transform: uppercase; font-weight: bold;
-        }
-        .btn:hover { background: #666; border-color: #448032; }
-        #hotbar {
-            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-            display: flex; gap: 4px; background: rgba(0,0,0,0.7); padding: 5px;
-            border: 2px solid #555; z-index: 50;
-        }
-        .slot { width: 42px; height: 42px; border: 2px solid #333; display: flex; justify-content: center; align-items: center; color: white; font-size: 9px; font-weight: bold; }
-        .selected { border-color: #fff !important; background: rgba(255,255,255,0.2); }
-        #death-msg { position: fixed; top: 20%; width: 100%; text-align: center; color: red; font-size: 40px; display: none; z-index: 200; text-shadow: 2px 2px #000; }
     </style>
 </head>
 <body>
-    <div id="death-msg">¡HAS MUERTO!</div>
-    <div id="crosshair"></div>
 
-    <div id="main-menu" class="overlay">
-        <h1 style="color: #448032; font-size: 45px; text-shadow: 3px 3px #000;">MC-HTML GOLD</h1>
-        <button class="btn" id="btn-play">JUGAR SOLITARIO</button>
-    </div>
+    <div id="network-status">🟢 Online</div>
+    <div id="crosshair">+</div>
 
-    <div id="loading-screen" class="overlay">
-        <h1 id="load-text">GENERANDO TERRENO...</h1>
+    <div id="loading-screen" class="screen">
+        <h2 id="load-text">CARGANDO MUNDO...</h2>
         <div class="loader-bar"><div id="progress"></div></div>
     </div>
 
-    <div id="esc-menu" class="overlay" style="display: none;">
-        <h2 style="color: white;">JUEGO PAUSADO</h2>
-        <button class="btn" id="btn-resume">VOLVER AL JUEGO</button>
-        <button class="btn" onclick="location.reload()">SALIR AL MENÚ</button>
+    <div id="main-menu" class="screen active">
+        <h1 style="letter-spacing: 5px; color: #448032;">HTML-CRAFT</h1>
+        <div class="btn-group">
+            <button class="btn" onclick="showScreen('singleplayer')">Un Jugador</button>
+            <button class="btn" onclick="showScreen('multiplayer')">Multijugador</button>
+        </div>
     </div>
 
-    <div id="hotbar">
-        <div id="slot1" class="slot selected" style="background: #448032;">PAS</div>
-        <div id="slot2" class="slot" style="background: #5d3a1a;">TIE</div>
-        <div id="slot3" class="slot" style="background: #777;">PIE</div>
-        <div id="slot4" class="slot" style="background: #3a2614;">TRO</div>
-        <div id="slot5" class="slot" style="background: #2d4c1e;">HOJ</div>
-        <div id="slot6" class="slot" style="background: #999;">ARE</div>
-        <div id="slot7" class="slot" style="background: #222;">OBS</div>
-        <div id="slot8" class="slot" style="background: #d4af37;">ORO</div>
-        <div id="slot9" class="slot" style="background: #eee; color:#000;">NIE</div>
+    <div id="singleplayer" class="screen">
+        <h2>MUNDOS LOCALES</h2>
+        <div class="btn-group">
+            <button class="btn" id="btn-play-alpha">Cargar Mundo Alpha</button>
+            <button class="btn" onclick="showScreen('main-menu')">Volver</button>
+        </div>
+    </div>
+
+    <div id="multiplayer" class="screen">
+        <h2>MULTIJUGADOR</h2>
+        <div id="server-list" style="width: 450px; background: #222; border: 2px solid #555; margin-bottom: 15px; padding: 10px;">
+            <div style="padding: 10px; background: #333; cursor: pointer;">🌐 SERVIDOR OFICIAL (Alpha Test 2026)</div>
+        </div>
+        <div class="btn-group" style="flex-direction: row; width: 500px;">
+            <button class="btn" style="flex:1" id="btn-host">Host</button>
+            <button class="btn" style="flex:1" id="btn-join">Unirse</button>
+            <button class="btn" style="flex:1" onclick="showScreen('main-menu')">Volver</button>
+        </div>
+    </div>
+
+    <div id="esc-menu" class="screen">
+        <h2>PAUSA</h2>
+        <div class="settings-panel">
+            <div class="setting-item">
+                <label>FOV: <span id="val-fov">60</span></label>
+                <input type="range" id="slider-fov" min="60" max="120" value="60">
+            </div>
+            <div class="setting-item">
+                <label>FPS MAX: <span id="val-fps">120</span></label>
+                <input type="range" id="slider-fps" min="30" max="300" value="120">
+            </div>
+            <div class="setting-item">
+                <label>NIEBLA (Distancia): <span id="val-fog">10</span></label>
+                <input type="range" id="slider-fog" min="10" max="60" value="10">
+            </div>
+        </div>
+        <div class="btn-group" style="margin-top: 20px;">
+            <button class="btn" id="btn-resume">Reanudar</button>
+            <button class="btn" onclick="location.reload()">Salir al Menú</button>
+        </div>
     </div>
 
     <script type="importmap">
-        { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+    <script>
+        window.showScreen = function(id) {
+            document.querySelectorAll('.screen').forEach(s => {
+                s.classList.remove('active');
+                s.style.display = 'none';
+            });
+            const target = document.getElementById(id);
+            if (target) {
+                target.classList.add('active');
+                target.style.display = 'flex';
+            }
+        };
     </script>
     <script type="module" src="game.js"></script>
 </body>
