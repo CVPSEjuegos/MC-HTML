@@ -40,6 +40,16 @@
 <body>
 
     <div id="crosshair">+</div>
+    <div id="ui-hearts" style="position: fixed; bottom: 30px; left: 50%; transform: translateX(-120%); display: flex; gap: 5px; z-index: 100;"></div>
+
+<div id="death-screen" class="screen">
+    <h1 style="color: #ff0000; font-size: 50px;">HAS MUERTO</h1>
+    <div class="btn-group">
+        <button class="btn" onclick="location.reload()">Reaparecer</button>
+        <button class="btn" onclick="window.showScreen('main-menu')">Menú Principal</button>
+    </div>
+</div>
+
     
     <div id="ui-hearts"></div>
 
@@ -112,3 +122,4 @@
     <script type="module" src="game.js"></script>
 </body>
 </html>
+
