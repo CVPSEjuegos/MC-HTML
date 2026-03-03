@@ -8,20 +8,20 @@ export class Player {
         this.camera = camera;
         this.controls = new PointerLockControls(camera, document.body);
         
-        // Estado físico
+        // Atributos físicos
         this.velocity = new THREE.Vector3();
         this.direction = new THREE.Vector3();
         this.canJump = false;
 
-        // Inventario básico
+        // --- SISTEMA DE INVENTARIO ---
         this.inventory = {
-            selectedSlot: 0,
-            slots: ["grass", "dirt", "stone", null, null, null, null, null, null]
+            slots: ["grass", "dirt", "stone", "wood", "leaves", null, null, null, null],
+            selected: 0
         };
 
-        // Evento para activar el ratón al hacer clic
+        // Bloqueo del puntero (Click para jugar)
         document.body.addEventListener('click', () => {
-            if (!this.controls.isLocked) {
+            if (document.getElementById('main-menu').style.display === 'none') {
                 this.controls.lock();
             }
         });
@@ -32,11 +32,12 @@ export class Player {
     update(keys, delta) {
         if (!this.controls.isLocked) return;
 
-        // Fricción y gravedad simple
+        // Simulación de fricción (para que no deslice infinitamente)
         this.velocity.x -= this.velocity.x * 10.0 * delta;
         this.velocity.z -= this.velocity.z * 10.0 * delta;
-        this.velocity.y -= 9.8 * 2.0 * delta; // Gravedad
+        this.velocity.y -= 9.8 * 2.5 * delta; // Gravedad
 
+        // Dirección del movimiento basada en WASD
         this.direction.z = Number(keys["w"] || false) - Number(keys["s"] || false);
         this.direction.x = Number(keys["d"] || false) - Number(keys["a"] || false);
         this.direction.normalize();
@@ -45,13 +46,13 @@ export class Player {
         if (keys["w"] || keys["s"]) this.velocity.z -= this.direction.z * speed * delta;
         if (keys["a"] || keys["d"]) this.velocity.x -= this.direction.x * speed * delta;
 
-        // Aplicar movimiento
+        // Aplicar movimiento a los controles
         this.controls.moveRight(-this.velocity.x * delta);
         this.controls.moveForward(-this.velocity.z * delta);
         
         this.controls.getObject().position.y += (this.velocity.y * delta);
 
-        // Suelo temporal (y=1.6 es la altura de los ojos)
+        // Suelo básico (Colisión con el piso en Y=1.6)
         if (this.controls.getObject().position.y < 1.6) {
             this.velocity.y = 0;
             this.controls.getObject().position.y = 1.6;
@@ -61,7 +62,7 @@ export class Player {
 
     jump() {
         if (this.canJump) {
-            this.velocity.y += 10;
+            this.velocity.y += 12; // Fuerza de salto
             this.canJump = false;
         }
     }
