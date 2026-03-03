@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Minecraft HTML5 - 0.0.9 ALPHA</title>
+    <title>MC-HTML 0.0.9 ALPHA Gold</title>
     <style>
         body { margin: 0; overflow: hidden; background-color: #87ceeb; font-family: 'Courier New', Courier, monospace; }
         #crosshair {
@@ -10,7 +10,7 @@
             border: 2px solid white; transform: translate(-50%, -50%);
             pointer-events: none; z-index: 10; display: none;
         }
-        /* Menú Original */
+        /* Estilo del Menú Original */
         .overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.7); display: flex; flex-direction: column;
@@ -23,28 +23,33 @@
         }
         .btn:hover { background: #777; border-color: #448032; }
         
+        /* Hotbar de 9 Slots */
         #hotbar {
             position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-            display: flex; gap: 5px; background: rgba(0,0,0,0.8); padding: 5px;
+            display: flex; gap: 4px; background: rgba(0,0,0,0.8); padding: 5px;
             border: 3px solid #111; z-index: 15;
         }
-        .slot { width: 50px; height: 50px; border: 4px solid #555; display: flex; justify-content: center; align-items: center; color: white; font-size: 10px; text-align: center;}
-        .selected { border-color: white !important; }
+        .slot { 
+            width: 45px; height: 45px; border: 3px solid #555; 
+            display: flex; justify-content: center; align-items: center; 
+            color: white; font-size: 8px; text-align: center; font-weight: bold;
+        }
+        .selected { border-color: white !important; box-shadow: 0 0 10px white; }
     </style>
 </head>
 <body>
     <div id="crosshair"></div>
 
     <div id="main-menu" class="overlay">
-        <h1 style="color: #448032; font-size: 50px; text-shadow: 4px 4px #000;">MC-HTML ALPHA</h1>
-        <button class="btn" id="btn-play-alpha">Jugar Alpha</button>
+        <h1 style="color: #448032; font-size: 50px; text-shadow: 4px 4px #000;">MC-HTML GOLD</h1>
+        <button class="btn" id="btn-play-alpha">Jugar Solitario</button>
         <button class="btn" id="btn-host">Hostear Mundo</button>
         <button class="btn" id="btn-join">Unirse a Mundo</button>
     </div>
 
     <div id="esc-menu" class="overlay" style="display: none;">
         <h2 style="color: white; text-shadow: 2px 2px #000;">PAUSA</h2>
-        <button class="btn" id="btn-resume">Volver</button>
+        <button class="btn" id="btn-resume">Reanudar</button>
         <button class="btn" onclick="location.reload()">Salir al Menú</button>
     </div>
 
@@ -54,6 +59,10 @@
         <div id="slot3" class="slot" style="background: #777;">PIEDRA</div>
         <div id="slot4" class="slot" style="background: #3a2614;">TRONCO</div>
         <div id="slot5" class="slot" style="background: #2d4c1e;">HOJAS</div>
+        <div id="slot6" class="slot" style="background: #999;">ARENA</div>
+        <div id="slot7" class="slot" style="background: #222;">OBSIDIANA</div>
+        <div id="slot8" class="slot" style="background: #d4af37;">ORO</div>
+        <div id="slot9" class="slot" style="background: #f0f0f0; color: #000;">NIEVE</div>
     </div>
 
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
