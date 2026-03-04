@@ -1,7 +1,69 @@
 import * as THREE from 'three';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
-import { World } from './World.js';
 
+// --- CLASE WORLD (Integrada) ---
+class World {
+    constructor(scene) {
+        this.scene = scene;
+        this.chunks = new Map();
+        this.blocks = []; 
+        this.chunkSize = 16;
+        this.renderDistance = 1;
+        
+        scene.fog = new THREE.FogExp2(0x87CEEB, 0.05);
+    }
+
+    generateChunk(cx, cz) {
+        const geometry = new THREE.BoxGeometry(1, 1, 1);
+        const material = new THREE.MeshStandardMaterial();
+        const count = this.chunkSize * this.chunkSize * 10; 
+        const mesh = new THREE.InstancedMesh(geometry, material, count);
+        const dummy = new THREE.Object3D();
+        const color = new THREE.Color();
+        let idx = 0;
+
+        for (let x = 0; x < this.chunkSize; x++) {
+            for (let z = 0; z < this.chunkSize; z++) {
+                const worldX = cx * this.chunkSize + x;
+                const worldZ = cz * this.chunkSize + z;
+                
+                // Generación de terreno
+                const h = Math.floor(Math.sin(worldX * 0.1) * Math.cos(worldZ * 0.1) * 3) + 5;
+
+                for (let y = 0; y <= h; y++) {
+                    if (y === h) color.setHex(0x448032); // Pasto
+                    else if (y > h - 2) color.setHex(0x5d3a1a); // Tierra
+                    else color.setHex(0x777777); // Piedra
+
+                    dummy.position.set(worldX, y, worldZ);
+                    dummy.updateMatrix();
+                    mesh.setMatrixAt(idx, dummy.matrix);
+                    mesh.setColorAt(idx, color);
+
+                    // Guardamos para colisiones (Optimizado)
+                    this.blocks.push(new THREE.Vector3(worldX, y, worldZ));
+                    idx++;
+                }
+            }
+        }
+        mesh.instanceMatrix.needsUpdate = true;
+        if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+        this.scene.add(mesh);
+        this.chunks.set(`${cx},${cz}`, mesh);
+    }
+
+    update(playerPos) {
+        const px = Math.floor(playerPos.x / this.chunkSize);
+        const pz = Math.floor(playerPos.z / this.chunkSize);
+        for (let x = px - this.renderDistance; x <= px + this.renderDistance; x++) {
+            for (let z = pz - this.renderDistance; z <= pz + this.renderDistance; z++) {
+                if (!this.chunks.has(`${x},${z}`)) this.generateChunk(x, z);
+            }
+        }
+    }
+}
+
+// --- LÓGICA DEL JUEGO ---
 let scene, camera, renderer, controls, world;
 let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
 let canJump = false, lastTime = performance.now();
@@ -10,27 +72,26 @@ const velocity = new THREE.Vector3();
 let isLoaded = false;
 let health = 10;
 let lastY = 0;
-let settings = { fov: 75, fog: 0.02 };
 
 function init() {
+    if (isLoaded) return;
+
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x87CEEB);
 
-    camera = new THREE.PerspectiveCamera(settings.fov, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     
     renderer = new THREE.WebGLRenderer({ antialias: false });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setPixelRatio(window.devicePixelRatio);
     document.body.appendChild(renderer.domElement);
 
-    const sunLight = new THREE.DirectionalLight(0xffffff, 1.0);
-    sunLight.position.set(10, 20, 10);
-    scene.add(sunLight);
-    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+    scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+    const sun = new THREE.DirectionalLight(0xffffff, 0.8);
+    sun.position.set(10, 20, 10);
+    scene.add(sun);
     
     controls = new PointerLockControls(camera, document.body);
-
-    world = new World(scene);
 
     controls.addEventListener('lock', () => {
         window.showScreen('none');
@@ -44,14 +105,30 @@ function init() {
         }
     });
 
-    setupUIListeners();
+    world = new World(scene);
+    setupUI();
     initHearts();
-    loadWorld();
+    
+    // Simular carga
+    window.showScreen('loading-screen');
+    let progress = 0;
+    const interval = setInterval(() => {
+        progress += 5;
+        document.getElementById('progress').style.width = progress + '%';
+        if(progress >= 100) {
+            clearInterval(interval);
+            world.update(new THREE.Vector3(0,0,0));
+            camera.position.set(8, 15, 8);
+            isLoaded = true;
+            window.showScreen('none');
+            controls.lock();
+            animate();
+        }
+    }, 50);
 }
 
 function initHearts() {
     const container = document.getElementById('ui-hearts');
-    if (!container) return;
     container.innerHTML = '';
     for (let i = 0; i < 10; i++) {
         const h = document.createElement('div');
@@ -62,103 +139,75 @@ function initHearts() {
 }
 
 function takeDamage(amt) {
-    if (health <= 0 || !isLoaded) return;
     health -= amt;
     for (let i = 0; i < 10; i++) {
         const heart = document.getElementById(`heart-${i}`);
-        if (heart) {
-            if (i >= health) heart.classList.add('empty');
-            else heart.classList.remove('empty');
-        }
+        if (heart && i >= health) heart.classList.add('empty');
     }
-    if (health <= 0) die();
-}
-
-function die() {
-    isLoaded = false;
-    controls.unlock();
-    window.showScreen('death-screen');
-}
-
-function setupUIListeners() {
-    const fovSlider = document.getElementById('slider-fov');
-    if(fovSlider) {
-        fovSlider.oninput = (e) => {
-            camera.fov = parseInt(e.target.value);
-            camera.updateProjectionMatrix();
-            document.getElementById('val-fov').innerText = e.target.value;
-        };
+    if (health <= 0) {
+        isLoaded = false;
+        controls.unlock();
+        window.showScreen('death-screen');
     }
-    
-    const btnResume = document.getElementById('btn-resume');
-    if(btnResume) btnResume.onclick = () => controls.lock();
 }
 
-async function loadWorld() {
-    window.showScreen('loading-screen');
+function setupUI() {
+    document.getElementById('slider-fov').oninput = (e) => {
+        camera.fov = e.target.value;
+        camera.updateProjectionMatrix();
+        document.getElementById('val-fov').innerText = e.target.value;
+    };
     
-    // Generación inicial
-    world.update(new THREE.Vector3(0, 0, 0)); 
-    
-    // Spawn en altura segura
-    camera.position.set(0, 15, 0); 
-    lastY = 15;
-    isLoaded = true;
+    document.getElementById('slider-fog').oninput = (e) => {
+        scene.fog.density = e.target.value / 200;
+        document.getElementById('val-fog').innerText = e.target.value;
+    };
 
-    setTimeout(() => {
-        window.showScreen('none');
-        controls.lock();
-        animate();
-    }, 1000);
+    document.getElementById('btn-resume').onclick = () => controls.lock();
 }
 
 function animate() {
+    if (!isLoaded) return;
     requestAnimationFrame(animate);
-    if (!controls.isLocked || !isLoaded) return;
 
     const time = performance.now();
     const delta = (time - lastTime) / 1000;
     lastTime = time;
 
-    velocity.x -= velocity.x * 10 * delta;
-    velocity.z -= velocity.z * 10 * delta;
-    velocity.y -= 25 * delta;
+    if (controls.isLocked) {
+        velocity.x -= velocity.x * 10.0 * delta;
+        velocity.z -= velocity.z * 10.0 * delta;
+        velocity.y -= 25.0 * delta; 
 
-    if (moveForward) velocity.z -= 150 * delta;
-    if (moveBackward) velocity.z += 150 * delta;
-    if (moveLeft) velocity.x -= 150 * delta;
-    if (moveRight) velocity.x += 150 * delta;
+        if (moveForward) velocity.z -= 150.0 * delta;
+        if (moveBackward) velocity.z += 150.0 * delta;
+        if (moveLeft) velocity.x -= 150.0 * delta;
+        if (moveRight) velocity.x += 150.0 * delta;
 
-    controls.moveForward(-velocity.z * delta);
-    controls.moveRight(velocity.x * delta);
-    camera.position.y += velocity.y * delta;
+        controls.moveRight(velocity.x * delta);
+        controls.moveForward(-velocity.z * delta);
+        camera.position.y += (velocity.y * delta);
 
-    // Colisiones simplificadas
-    let ground = false;
-    for (let b of world.blocks) {
-        if (Math.abs(camera.position.x - b.position.x) < 0.6 && 
-            Math.abs(camera.position.z - b.position.z) < 0.6) {
-            if (camera.position.y - b.position.y < 2.1 && camera.position.y - b.position.y > 1.0) {
-                let fallDist = lastY - camera.position.y;
-                if(fallDist > 6) takeDamage(Math.floor(fallDist - 5));
-
-                camera.position.y = b.position.y + 2;
-                velocity.y = 0;
-                ground = true;
-                lastY = camera.position.y;
-                break;
+        // Colisión con el suelo
+        let onGround = false;
+        for (let b of world.blocks) {
+            if (Math.abs(camera.position.x - b.x) < 0.6 && Math.abs(camera.position.z - b.z) < 0.6) {
+                if (camera.position.y < b.y + 2 && camera.position.y > b.y) {
+                    if (velocity.y < -12) takeDamage(1);
+                    camera.position.y = b.y + 2;
+                    velocity.y = 0;
+                    onGround = true;
+                    break;
+                }
             }
         }
+        canJump = onGround;
+        if (camera.position.y < -20) takeDamage(10);
     }
-    canJump = ground;
-    if (!ground && camera.position.y > lastY) lastY = camera.position.y;
-    
-    if (camera.position.y < -30) takeDamage(10);
 
     renderer.render(scene, camera);
 }
 
-// Escuchas de teclado
 document.addEventListener('keydown', (e) => {
     if (e.code === 'KeyW') moveForward = true;
     if (e.code === 'KeyS') moveBackward = true;
@@ -174,5 +223,4 @@ document.addEventListener('keyup', (e) => {
     if (e.code === 'KeyD') moveRight = false;
 });
 
-// Botón de inicio
 document.getElementById('btn-play-alpha').onclick = () => init();
