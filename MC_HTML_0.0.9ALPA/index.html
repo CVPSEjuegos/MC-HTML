@@ -2,16 +2,52 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HTML-CRAFT ALPHA GOLD</title>
     <style>
         body { margin: 0; overflow: hidden; background: #000; font-family: 'Segoe UI', sans-serif; color: white; user-select: none; }
         canvas { display: block; }
-        .screen { position: absolute; width: 100%; height: 100%; display: none; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.85); z-index: 20; }
+        
+        /* Pantallas de Menú */
+        .screen { 
+            position: absolute; 
+            width: 100%; 
+            height: 100%; 
+            display: none; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            background: rgba(0,0,0,0.85); 
+            z-index: 20; 
+        }
         .active { display: flex !important; }
+        
         .btn-group { display: flex; flex-direction: column; gap: 10px; width: 350px; }
-        .btn { padding: 12px; background: #444; color: white; border: 2px solid #000; cursor: pointer; font-weight: bold; font-size: 16px; text-transform: uppercase; }
+        .btn { 
+            padding: 12px; 
+            background: #444; 
+            color: white; 
+            border: 2px solid #000; 
+            cursor: pointer; 
+            font-weight: bold; 
+            font-size: 16px; 
+            text-transform: uppercase; 
+            transition: 0.2s;
+        }
         .btn:hover { background: #666; border-color: #fff; }
-        #crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 24px; display: none; pointer-events: none; z-index: 5; }
+        
+        /* Interfaz de Juego (HUD) */
+        #crosshair { 
+            position: absolute; 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -50%); 
+            color: white; 
+            font-size: 24px; 
+            display: none; 
+            pointer-events: none; 
+            z-index: 5; 
+        }
         
         #ui-hearts { 
             position: fixed; 
@@ -23,16 +59,24 @@
             z-index: 100; 
             pointer-events: none;
         }
-        .heart { width: 18px; height: 18px; background: #ff0000; border: 2px solid #000; }
-        .heart.empty { background: #333 !important; opacity: 0.3; }
+        .heart { 
+            width: 18px; 
+            height: 18px; 
+            background: #ff0000; 
+            border: 2px solid #000; 
+            box-shadow: inset -2px -2px 0px #800000;
+        }
+        .heart.empty { background: #333 !important; opacity: 0.3; box-shadow: none; }
 
+        /* Ajustes */
         .settings-panel { background: #222; padding: 20px; border: 2px solid #555; width: 350px; margin-top: 10px; }
         .setting-item { display: flex; flex-direction: column; margin-bottom: 15px; }
         input[type=range] { cursor: pointer; accent-color: #448032; }
         
+        /* Carga */
         #loading-screen { background: #000; z-index: 100; }
         .loader-bar { width: 300px; height: 10px; background: #222; border: 1px solid #fff; margin-top: 10px; }
-        #progress { width: 0%; height: 100%; background: #448032; }
+        #progress { width: 0%; height: 100%; background: #448032; transition: width 0.1s; }
     </style>
 </head>
 <body>
@@ -49,12 +93,12 @@
         <h1 style="color: #ff0000; font-size: 48px; letter-spacing: 10px;">HAS MUERTO</h1>
         <div class="btn-group">
             <button class="btn" onclick="location.reload()">Reaparecer</button>
-            <button class="btn" onclick="window.showScreen('main-menu')">Menú Principal</button>
+            <button class="btn" onclick="location.reload()">Menú Principal</button>
         </div>
     </div>
 
     <div id="main-menu" class="screen active">
-        <h1 style="letter-spacing: 5px; color: #448032;">HTML-CRAFT</h1>
+        <h1 style="letter-spacing: 5px; color: #448032; font-size: 50px; text-shadow: 4px 4px #000;">HTML-CRAFT</h1>
         <div class="btn-group">
             <button class="btn" onclick="showScreen('singleplayer')">Un Jugador</button>
             <button class="btn">Multijugador</button>
@@ -73,8 +117,8 @@
         <h2>PAUSA</h2>
         <div class="settings-panel">
             <div class="setting-item">
-                <label>FOV: <span id="val-fov">60</span></label>
-                <input type="range" id="slider-fov" min="60" max="120" value="60">
+                <label>FOV: <span id="val-fov">75</span></label>
+                <input type="range" id="slider-fov" min="60" max="120" value="75">
             </div>
             <div class="setting-item">
                 <label>NIEBLA: <span id="val-fog">10</span></label>
@@ -95,13 +139,17 @@
         }
     }
     </script>
+
     <script>
         window.showScreen = function(id) {
-            document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
+            // Ocultar todas las pantallas
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            // Mostrar la seleccionada (si es 'none' no muestra ninguna)
             const target = document.getElementById(id);
-            if (target) target.style.display = 'flex';
+            if (target) target.classList.add('active');
         };
     </script>
+
     <script type="module" src="game.js"></script>
 </body>
 </html>
