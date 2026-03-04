@@ -7,11 +7,10 @@ let moveForward = false, moveBackward = false, moveLeft = false, moveRight = fal
 let canJump = false, lastTime = performance.now();
 const velocity = new THREE.Vector3();
 
-// Variables de Estado
 let isLoaded = false;
 let health = 10;
 let lastY = 0;
-let settings = { fov: 70, fps: 120, fog: 0.02 };
+let settings = { fov: 75, fog: 0.02 };
 
 function init() {
     scene = new THREE.Scene();
@@ -21,14 +20,16 @@ function init() {
     
     renderer = new THREE.WebGLRenderer({ antialias: false });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(window.devicePixelRatio > 1 ? 2 : 1);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     document.body.appendChild(renderer.domElement);
 
-    scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+    const sunLight = new THREE.DirectionalLight(0xffffff, 1.0);
+    sunLight.position.set(10, 20, 10);
+    scene.add(sunLight);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
     
     controls = new PointerLockControls(camera, document.body);
 
-    // Inicializar Mundo
     world = new World(scene);
 
     controls.addEventListener('lock', () => {
@@ -77,45 +78,38 @@ function die() {
     isLoaded = false;
     controls.unlock();
     window.showScreen('death-screen');
-    document.getElementById('crosshair').style.display = 'none';
 }
 
 function setupUIListeners() {
-    document.getElementById('slider-fov').oninput = (e) => {
-        settings.fov = e.target.value;
-        document.getElementById('val-fov').innerText = settings.fov;
-        camera.fov = parseInt(settings.fov);
-        camera.updateProjectionMatrix();
-    };
-
-    document.getElementById('slider-fog').oninput = (e) => {
-        let val = e.target.value / 500;
-        if(scene.fog) scene.fog.density = val;
-        document.getElementById('val-fog').innerText = e.target.value;
-    };
+    const fovSlider = document.getElementById('slider-fov');
+    if(fovSlider) {
+        fovSlider.oninput = (e) => {
+            camera.fov = parseInt(e.target.value);
+            camera.updateProjectionMatrix();
+            document.getElementById('val-fov').innerText = e.target.value;
+        };
+    }
     
-    document.getElementById('btn-resume').onclick = () => controls.lock();
+    const btnResume = document.getElementById('btn-resume');
+    if(btnResume) btnResume.onclick = () => controls.lock();
 }
 
 async function loadWorld() {
     window.showScreen('loading-screen');
-    const progress = document.getElementById('progress');
     
-    // Generar terreno inicial en el origen
+    // Generación inicial
     world.update(new THREE.Vector3(0, 0, 0)); 
     
-    if (progress) progress.style.width = "100%";
-    await new Promise(r => setTimeout(r, 600));
-
-    // Spawn seguro
-    camera.position.set(0, 20, 0); 
-    lastY = 20;
-    health = 10;
+    // Spawn en altura segura
+    camera.position.set(0, 15, 0); 
+    lastY = 15;
     isLoaded = true;
 
-    window.showScreen('none');
-    controls.lock();
-    animate();
+    setTimeout(() => {
+        window.showScreen('none');
+        controls.lock();
+        animate();
+    }, 1000);
 }
 
 function animate() {
@@ -128,7 +122,7 @@ function animate() {
 
     velocity.x -= velocity.x * 10 * delta;
     velocity.z -= velocity.z * 10 * delta;
-    velocity.y -= 25 * delta; // Gravedad
+    velocity.y -= 25 * delta;
 
     if (moveForward) velocity.z -= 150 * delta;
     if (moveBackward) velocity.z += 150 * delta;
@@ -139,20 +133,15 @@ function animate() {
     controls.moveRight(velocity.x * delta);
     camera.position.y += velocity.y * delta;
 
-    // --- SISTEMA DE COLISIONES ---
+    // Colisiones simplificadas
     let ground = false;
-    const px = camera.position.x;
-    const py = camera.position.y;
-    const pz = camera.position.z;
-    
-    for (let i = 0; i < world.blocks.length; i++) {
-        const b = world.blocks[i];
-        if (Math.abs(px - b.position.x) < 0.7 && Math.abs(pz - b.position.z) < 0.7) {
-            // Detección de suelo (pies del jugador)
-            if (py - b.position.y < 2.1 && py - b.position.y > 1.0) {
-                let fallDist = lastY - py;
+    for (let b of world.blocks) {
+        if (Math.abs(camera.position.x - b.position.x) < 0.6 && 
+            Math.abs(camera.position.z - b.position.z) < 0.6) {
+            if (camera.position.y - b.position.y < 2.1 && camera.position.y - b.position.y > 1.0) {
+                let fallDist = lastY - camera.position.y;
                 if(fallDist > 6) takeDamage(Math.floor(fallDist - 5));
-                
+
                 camera.position.y = b.position.y + 2;
                 velocity.y = 0;
                 ground = true;
@@ -162,19 +151,14 @@ function animate() {
         }
     }
     canJump = ground;
-    if (!ground && py > lastY) lastY = py;
-
-    // Actualizar generación infinita
-    world.update(camera.position);
-
-    // Muerte por caída al vacío
-    if (py < -30) takeDamage(10);
+    if (!ground && camera.position.y > lastY) lastY = camera.position.y;
+    
+    if (camera.position.y < -30) takeDamage(10);
 
     renderer.render(scene, camera);
 }
 
-document.getElementById('btn-play-alpha').onclick = () => init();
-
+// Escuchas de teclado
 document.addEventListener('keydown', (e) => {
     if (e.code === 'KeyW') moveForward = true;
     if (e.code === 'KeyS') moveBackward = true;
@@ -189,3 +173,6 @@ document.addEventListener('keyup', (e) => {
     if (e.code === 'KeyA') moveLeft = false;
     if (e.code === 'KeyD') moveRight = false;
 });
+
+// Botón de inicio
+document.getElementById('btn-play-alpha').onclick = () => init();
