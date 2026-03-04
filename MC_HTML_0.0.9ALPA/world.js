@@ -1,25 +1,22 @@
 import * as THREE from 'three';
-import { ImprovedNoise } from 'three/addons/math/ImprovedNoise.js'; // Perlin noise
+import { ImprovedNoise } from 'three/addons/math/ImprovedNoise.js';
 
 export class World {
-    constructor(scene) {
+    constructor(scene, renderDistance = 5) {
         this.scene = scene;
         this.chunks = new Map();
-        this.chunkSize = 16;
-        this.chunkHeight = 20;
-        this.renderRadius = 3; // cantidad de chunks a generar alrededor
         this.blocks = [];
+        this.chunkSize = 16;
+        this.renderDistance = renderDistance;
         this.noise = new ImprovedNoise();
-        this.seed = Math.random() * 100;
 
-        scene.fog = new THREE.FogExp2(0x87CEEB, 0.02);
+        scene.fog = new THREE.FogExp2(0x87CEEB, 0.05);
     }
 
-    // Genera un chunk en (cx, cz)
     generateChunk(cx, cz) {
         const geometry = new THREE.BoxGeometry(1, 1, 1);
         const material = new THREE.MeshStandardMaterial();
-        const count = this.chunkSize * this.chunkSize * this.chunkHeight;
+        const count = this.chunkSize * this.chunkSize * 16;
         const mesh = new THREE.InstancedMesh(geometry, material, count);
         const dummy = new THREE.Object3D();
         const color = new THREE.Color();
@@ -27,25 +24,20 @@ export class World {
 
         for (let x = 0; x < this.chunkSize; x++) {
             for (let z = 0; z < this.chunkSize; z++) {
-                // Coordenadas en el mundo
                 const worldX = cx * this.chunkSize + x;
                 const worldZ = cz * this.chunkSize + z;
-
-                // Altura usando Perlin Noise
-                const height = Math.floor(this.noise.noise(worldX / 20, worldZ / 20, this.seed) * 10 + 10);
+                const height = Math.floor(this.noise.noise(worldX / 20, worldZ / 20, 0) * 5) + 5;
 
                 for (let y = 0; y <= height; y++) {
-                    // Color según capa
-                    if (y === height) color.setHex(0x448032); // pasto
-                    else if (y > height - 3) color.setHex(0x5d3a1a); // tierra
-                    else color.setHex(0x777777); // piedra
+                    if (y === height) color.setHex(0x448032);
+                    else if (y > height - 2) color.setHex(0x5d3a1a);
+                    else color.setHex(0x777777);
 
                     dummy.position.set(worldX, y, worldZ);
                     dummy.updateMatrix();
                     mesh.setMatrixAt(idx, dummy.matrix);
                     mesh.setColorAt(idx, color);
 
-                    // Guardar bloque para colisiones
                     this.blocks.push(new THREE.Vector3(worldX, y, worldZ));
                     idx++;
                 }
@@ -58,33 +50,16 @@ export class World {
         this.chunks.set(`${cx},${cz}`, mesh);
     }
 
-    // Actualiza chunks alrededor del jugador
     update(playerPos) {
-        const pcx = Math.floor(playerPos.x / this.chunkSize);
-        const pcz = Math.floor(playerPos.z / this.chunkSize);
+        const px = Math.floor(playerPos.x / this.chunkSize);
+        const pz = Math.floor(playerPos.z / this.chunkSize);
 
-        const activeChunks = new Set();
-
-        for (let dx = -this.renderRadius; dx <= this.renderRadius; dx++) {
-            for (let dz = -this.renderRadius; dz <= this.renderRadius; dz++) {
-                const dist = Math.sqrt(dx*dx + dz*dz);
-                if (dist <= this.renderRadius) { // círculo alrededor del jugador
-                    const cx = pcx + dx;
-                    const cz = pcz + dz;
-                    activeChunks.add(`${cx},${cz}`);
-                    if (!this.chunks.has(`${cx},${cz}`)) this.generateChunk(cx, cz);
+        for (let x = px - this.renderDistance; x <= px + this.renderDistance; x++) {
+            for (let z = pz - this.renderDistance; z <= pz + this.renderDistance; z++) {
+                const distance = Math.sqrt((x - px) ** 2 + (z - pz) ** 2);
+                if (distance <= this.renderDistance && !this.chunks.has(`${x},${z}`)) {
+                    this.generateChunk(x, z);
                 }
-            }
-        }
-
-        // Descargar chunks que están fuera del radio
-        for (let key of this.chunks.keys()) {
-            if (!activeChunks.has(key)) {
-                const mesh = this.chunks.get(key);
-                this.scene.remove(mesh);
-                mesh.geometry.dispose();
-                if (mesh.material) mesh.material.dispose();
-                this.chunks.delete(key);
             }
         }
     }
