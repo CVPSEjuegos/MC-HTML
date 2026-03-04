@@ -4,18 +4,20 @@ import { ImprovedNoise } from 'three/addons/math/ImprovedNoise.js';
 export class World {
     constructor(scene) {
         this.scene = scene;
-        this.chunks = new Map();
-        this.chunkSize = 16;
-        this.renderDistance = 6;
-        this.noise = new ImprovedNoise();
+        this.chunks = new Map();           // Mapa de chunks cargados
+        this.chunkSize = 16;               // Tamaño de cada chunk
+        this.renderDistance = 6;           // Distancia de render en chunks
+        this.blocks = [];                  // Lista de todos los bloques para colisiones
+        this.noise = new ImprovedNoise();  // Perlin noise para altura
 
+        // Configurar niebla
         scene.fog = new THREE.FogExp2(0x87CEEB, 0.05);
     }
 
     generateChunk(cx, cz) {
         const geometry = new THREE.BoxGeometry(1, 1, 1);
         const material = new THREE.MeshStandardMaterial({ vertexColors: true });
-        const count = this.chunkSize * this.chunkSize * 12; // espacio suficiente para bloques
+        const count = this.chunkSize * this.chunkSize * 12; // suficiente para bloques
         const mesh = new THREE.InstancedMesh(geometry, material, count);
         const dummy = new THREE.Object3D();
         const color = new THREE.Color();
@@ -26,10 +28,11 @@ export class World {
                 const wx = cx * this.chunkSize + x;
                 const wz = cz * this.chunkSize + z;
 
-                // Generación Perlin ajustada
-                const height = Math.floor((this.noise.noise(wx / 30, wz / 30, 0) * 0.5 + 0.5) * 12) + 4;
+                // Generación Perlin ajustada para terreno más suave
+                const height = Math.floor((this.noise.noise(wx / 40, wz / 40, 0) * 0.5 + 0.5) * 10) + 4;
 
                 for (let y = 0; y <= height; y++) {
+                    // Colores de bloques
                     if (y === height) color.setHex(0x448032); // pasto
                     else if (y > height - 2) color.setHex(0x5d3a1a); // tierra
                     else color.setHex(0x777777); // piedra
@@ -38,6 +41,9 @@ export class World {
                     dummy.updateMatrix();
                     mesh.setMatrixAt(idx, dummy.matrix);
                     mesh.setColorAt(idx, color);
+
+                    // Guardar para colisiones
+                    this.blocks.push(new THREE.Vector3(wx, y, wz));
                     idx++;
                 }
             }
