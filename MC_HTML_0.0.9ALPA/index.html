@@ -1,125 +1,84 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HTML-CRAFT ALPHA GOLD</title>
-    <style>
-        body { margin: 0; overflow: hidden; background: #000; font-family: 'Segoe UI', sans-serif; color: white; user-select: none; }
-        canvas { display: block; }
-        
-        /* Pantallas de Menú */
-        .screen { 
-            position: absolute; 
-            width: 100%; 
-            height: 100%; 
-            display: none; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            background: rgba(0,0,0,0.85); 
-            z-index: 20; 
-        }
-        .active { display: flex !important; }
-        
-        .btn-group { display: flex; flex-direction: column; gap: 10px; width: 350px; }
-        .btn { 
-            padding: 12px; 
-            background: #444; 
-            color: white; 
-            border: 2px solid #000; 
-            cursor: pointer; 
-            font-weight: bold; 
-            font-size: 16px; 
-            text-transform: uppercase; 
-            transition: 0.2s;
-        }
-        .btn:hover { background: #666; border-color: #fff; }
-        
-        /* Interfaz de Juego (HUD) */
-        #crosshair { 
-            position: absolute; 
-            top: 50%; 
-            left: 50%; 
-            transform: translate(-50%, -50%); 
-            color: white; 
-            font-size: 24px; 
-            display: none; 
-            pointer-events: none; 
-            z-index: 5; 
-        }
-        
-        #ui-hearts { 
-            position: fixed; 
-            bottom: 30px; 
-            left: 50%; 
-            transform: translateX(-110%); 
-            display: flex; 
-            gap: 4px; 
-            z-index: 100; 
-            pointer-events: none;
-        }
-        .heart { 
-            width: 18px; 
-            height: 18px; 
-            background: #ff0000; 
-            border: 2px solid #000; 
-            box-shadow: inset -2px -2px 0px #800000;
-        }
-        .heart.empty { background: #333 !important; opacity: 0.3; box-shadow: none; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HTML-CRAFT ALPHA GOLD</title>
+<style>
+body { margin: 0; overflow: hidden; background: #000; font-family: 'Segoe UI', sans-serif; color: white; user-select: none; }
+canvas { display: block; }
 
-        /* Ajustes */
-        .settings-panel { background: #222; padding: 20px; border: 2px solid #555; width: 350px; margin-top: 10px; }
-        .setting-item { display: flex; flex-direction: column; margin-bottom: 15px; }
-        input[type=range] { cursor: pointer; accent-color: #448032; }
-        
-        /* Carga */
-        #loading-screen { background: #000; z-index: 100; }
-        .loader-bar { width: 300px; height: 10px; background: #222; border: 1px solid #fff; margin-top: 10px; }
-        #progress { width: 0%; height: 100%; background: #448032; transition: width 0.1s; }
-    </style>
+.screen { 
+    position: absolute; width: 100%; height: 100%; display: none; 
+    flex-direction: column; align-items: center; justify-content: center; 
+    background: rgba(0,0,0,0.85); z-index: 20; 
+}
+.active { display: flex !important; }
+
+.btn-group { display: flex; flex-direction: column; gap: 10px; width: 350px; }
+.btn { 
+    padding: 12px; background: #444; color: white; border: 2px solid #000; 
+    cursor: pointer; font-weight: bold; font-size: 16px; text-transform: uppercase; transition: 0.2s;
+}
+.btn:hover { background: #666; border-color: #fff; }
+
+#crosshair { 
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    color: white; font-size: 24px; display: none; pointer-events: none; z-index: 5; 
+}
+
+#ui-hearts { 
+    position: fixed; bottom: 30px; left: 50%; transform: translateX(-110%);
+    display: flex; gap: 4px; z-index: 100; pointer-events: none;
+}
+.heart { width: 18px; height: 18px; background: #ff0000; border: 2px solid #000; box-shadow: inset -2px -2px 0px #800000; }
+.heart.empty { background: #333 !important; opacity: 0.3; box-shadow: none; }
+
+.settings-panel { background: #222; padding: 20px; border: 2px solid #555; width: 350px; margin-top: 10px; }
+.setting-item { display: flex; flex-direction: column; margin-bottom: 15px; }
+input[type=range] { cursor: pointer; accent-color: #448032; }
+
+#loading-screen { background: #000; z-index: 100; }
+.loader-bar { width: 300px; height: 10px; background: #222; border: 1px solid #fff; margin-top: 10px; }
+#progress { width: 0%; height: 100%; background: #448032; transition: width 0.1s; }
+
+</style>
 </head>
 <body>
 
-    <div id="crosshair">+</div>
-    <div id="ui-hearts"></div>
+<div id="crosshair">+</div>
+<div id="ui-hearts"></div>
 
-    <div id="loading-screen" class="screen">
-        <h2 id="load-text">CARGANDO MUNDO...</h2>
-        <div class="loader-bar"><div id="progress"></div></div>
+<div id="loading-screen" class="screen">
+    <h2 id="load-text">CARGANDO MUNDO...</h2>
+    <div class="loader-bar"><div id="progress"></div></div>
+</div>
+
+<div id="death-screen" class="screen">
+    <h1 style="color: #ff0000; font-size: 48px; letter-spacing: 10px;">HAS MUERTO</h1>
+    <div class="btn-group">
+        <button class="btn" onclick="location.reload()">Reaparecer</button>
+        <button class="btn" onclick="location.reload()">Menú Principal</button>
     </div>
+</div>
 
-    <div id="death-screen" class="screen">
-        <h1 style="color: #ff0000; font-size: 48px; letter-spacing: 10px;">HAS MUERTO</h1>
-        <div class="btn-group">
-            <button class="btn" onclick="location.reload()">Reaparecer</button>
-            <button class="btn" onclick="location.reload()">Menú Principal</button>
-        </div>
-    </div>
-
-    <div id="main-menu" class="screen active">
-    <h1 style="letter-spacing: 5px; color: #448032; font-size: 50px; text-shadow: 4px 4px #000;">
-        HTML-CRAFT
-    </h1>
-    <!-- Mensaje de versión -->
-    <h3 style="color:#fff; font-size:18px; letter-spacing:2px; margin-top: -10px;">
-        Versión 0.0.9
-    </h3>
+<div id="main-menu" class="screen active">
+    <h1 style="letter-spacing: 5px; color: #448032; font-size: 50px; text-shadow: 4px 4px #000;">HTML-CRAFT</h1>
+    <h3 style="color:#fff; font-size:18px; letter-spacing:2px; margin-top: -10px;">Versión 0.0.9</h3>
     <div class="btn-group">
         <button class="btn" onclick="showScreen('singleplayer')">Un Jugador</button>
         <button class="btn">Multijugador</button>
     </div>
 </div>
 
-    <div id="singleplayer" class="screen">
-        <h2>MUNDOS</h2>
-        <div class="btn-group">
-            <button class="btn" id="btn-play-alpha">Cargar Mundo Alpha</button>
-            <button class="btn" onclick="showScreen('main-menu')">Volver</button>
-        </div>
+<div id="singleplayer" class="screen">
+    <h2>MUNDOS</h2>
+    <div class="btn-group">
+        <button class="btn" id="btn-play-alpha">Cargar Mundo Alpha</button>
+        <button class="btn" onclick="showScreen('main-menu')">Volver</button>
     </div>
+</div>
 
-    <!-- Modificación en el ESC MENU -->
 <div id="esc-menu" class="screen">
     <h2>PAUSA</h2>
     <div class="settings-panel">
@@ -134,32 +93,66 @@
     </div>
     <div class="btn-group" style="margin-top: 20px;">
         <button class="btn" id="btn-resume">Reanudar</button>
-        <button class="btn" onclick="showScreen('options-menu')">Opciones</button> <!-- BOTÓN NUEVO -->
+        <button class="btn" onclick="showScreen('options-menu')">Opciones</button>
         <button class="btn" onclick="location.reload()">Salir al Menú</button>
     </div>
 </div>
 
-    <script type="importmap">
-    {
-        "imports": {
-            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-        }
+<div id="options-menu" class="screen">
+    <h2>OPCIONES</h2>
+    <div class="settings-panel">
+        <div class="setting-item">
+            <label>Render Distance (Chunks): <span id="val-chunks">6</span></label>
+            <input type="range" id="slider-chunks" min="3" max="12" value="6">
+        </div>
+    </div>
+    <div class="btn-group" style="margin-top: 20px;">
+        <button class="btn" onclick="showScreen('esc-menu')">Volver</button>
+    </div>
+</div>
+
+<script type="importmap">
+{
+    "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
     }
-    </script>
+}
+</script>
 
-    <script>
-        window.showScreen = function(id) {
-            // Ocultar todas las pantallas
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            // Mostrar la seleccionada (si es 'none' no muestra ninguna)
-            const target = document.getElementById(id);
-            if (target) target.classList.add('active');
-        };
-    </script>
+<script>
+window.showScreen = function(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    const target = document.getElementById(id);
+    if(target) target.classList.add('active');
+};
+</script>
 
-    <script type="module" src="game.js"></script>
+<script type="module">
+import * as THREE from 'three';
+import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
+
+// --- Aquí va todo tu game.js con World.js integrado ---
+// Mantén la estructura que ya teníamos y asegúrate de:
+document.getElementById('btn-play-alpha').onclick = () => init();
+
+// Vincula sliders
+document.getElementById('slider-fov').oninput = (e) => {
+    camera.fov = e.target.value;
+    camera.updateProjectionMatrix();
+    document.getElementById('val-fov').innerText = e.target.value;
+};
+document.getElementById('slider-fog').oninput = (e) => {
+    scene.fog.density = e.target.value / 200;
+    document.getElementById('val-fog').innerText = e.target.value;
+};
+document.getElementById('slider-chunks').oninput = (e) => {
+    world.renderDistance = parseInt(e.target.value);
+    document.getElementById('val-chunks').innerText = e.target.value;
+};
+document.getElementById('btn-resume').onclick = () => controls.lock();
+
+</script>
+
 </body>
 </html>
-
-
