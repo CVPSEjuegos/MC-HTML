@@ -112,30 +112,32 @@
 </div>
 
     <div id="singleplayer" class="screen">
-        <h2>MUNDOS LOCALES</h2>
+        <h2>MUNDOS</h2>
         <div class="btn-group">
             <button class="btn" id="btn-play-alpha">Cargar Mundo Alpha</button>
             <button class="btn" onclick="showScreen('main-menu')">Volver</button>
         </div>
     </div>
 
-    <div id="esc-menu" class="screen">
-        <h2>PAUSA</h2>
-        <div class="settings-panel">
-            <div class="setting-item">
-                <label>FOV: <span id="val-fov">75</span></label>
-                <input type="range" id="slider-fov" min="60" max="120" value="75">
-            </div>
-            <div class="setting-item">
-                <label>NIEBLA: <span id="val-fog">10</span></label>
-                <input type="range" id="slider-fog" min="1" max="50" value="10">
-            </div>
+    <!-- Modificación en el ESC MENU -->
+<div id="esc-menu" class="screen">
+    <h2>PAUSA</h2>
+    <div class="settings-panel">
+        <div class="setting-item">
+            <label>FOV: <span id="val-fov">75</span></label>
+            <input type="range" id="slider-fov" min="60" max="120" value="75">
         </div>
-        <div class="btn-group" style="margin-top: 20px;">
-            <button class="btn" id="btn-resume">Reanudar</button>
-            <button class="btn" onclick="location.reload()">Salir al Menú</button>
+        <div class="setting-item">
+            <label>NIEBLA: <span id="val-fog">10</span></label>
+            <input type="range" id="slider-fog" min="1" max="50" value="10">
         </div>
     </div>
+    <div class="btn-group" style="margin-top: 20px;">
+        <button class="btn" id="btn-resume">Reanudar</button>
+        <button class="btn" onclick="showScreen('options-menu')">Opciones</button> <!-- BOTÓN NUEVO -->
+        <button class="btn" onclick="location.reload()">Salir al Menú</button>
+    </div>
+</div>
 
     <script type="importmap">
     {
@@ -159,4 +161,5 @@
     <script type="module" src="game.js"></script>
 </body>
 </html>
+
 
