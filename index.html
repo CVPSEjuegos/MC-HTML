@@ -117,10 +117,19 @@ function iniciarJuego() {
 
 // Cargar versiones automáticamente desde versions.json
 fetch('./versions.json')
-.then(res => res.json())
+.then(res => {
+    if (!res.ok) throw new Error("No se pudo cargar versions.json");
+    return res.json();
+})
 .then(data => {
     const select = document.getElementById('version-select');
     select.innerHTML = '';
+
+    if (!data.versions || data.versions.length === 0) {
+        select.innerHTML = '<option>No hay versiones</option>';
+        return;
+    }
+
     data.versions.forEach(v => {
         const opt = document.createElement('option');
         opt.value = v;
@@ -128,6 +137,18 @@ fetch('./versions.json')
         select.appendChild(opt);
     });
 })
+.catch(err => {
+    console.error("No se pudo cargar versions.json", err);
+
+    // fallback SIN romper UI
+    document.getElementById('version-select').innerHTML = `
+        <option>MC_HTML_0.0.1ALPA</option>
+        <option>MC_HTML_0.0.4ALPA</option>
+        <option>MC_HTML_0.0.9ALPA</option>
+        <option>MC_HTML_0.1.5_ALPA</option>
+    `;
+});
+  
 .catch(err => {
     console.error("No se pudo cargar versions.json", err);
     document.getElementById('version-select').innerHTML = '<option>Error al cargar versiones</option>';
